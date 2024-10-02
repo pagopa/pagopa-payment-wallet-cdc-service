@@ -33,6 +33,15 @@ kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") } }
 
 tasks.withType<Test> { useJUnitPlatform() }
 
+springBoot {
+  mainClass.set("it.pagopa.wallet.PagopaPaymentWalletCdcServiceApplicationKt")
+  buildInfo {
+    properties {
+      additional.set(mapOf("description" to (project.description ?: "Default description")))
+    }
+  }
+}
+
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
   kotlin {
     toggleOffOn()
