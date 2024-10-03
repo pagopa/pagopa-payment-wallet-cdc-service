@@ -2,13 +2,11 @@ package it.pagopa.wallet.services
 
 import com.azure.core.http.rest.Response
 import com.azure.storage.queue.models.SendMessageResult
-import it.pagopa.wallet.audit.*
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracingUtils
 import it.pagopa.wallet.config.properties.ExpirationQueueConfig
-import it.pagopa.wallet.domain.wallets.LoggingEventDispatcher
-import it.pagopa.wallet.domain.wallets.WalletId
 import java.time.Duration
+import org.bson.BsonDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -19,112 +17,28 @@ class WalletPaymentCDCEventDispatcherService(
     private val walletQueueClient: WalletQueueClient,
     private val tracingUtils: TracingUtils,
     private val expirationQueueConfig: ExpirationQueueConfig,
-) : LoggingEventDispatcher {
+) {
 
-    private val ADDED_EVENT_TYPE = "added"
-
-    private val DELETED_EVENT_TYPE = "deleted"
-
-    private val UPDATED_EVENT_TYPE = "updated"
-
+    private val WALLET_CDC_EVENT_HANDLER_SPAN_NAME = "cdcWalletEvent"
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
     private val walletExpireTimeout = Duration.ofSeconds(expirationQueueConfig.timeoutWalletExpired)
 
-    companion object {
-        const val WALLET_CREATED_EVENT_HANDLER_SPAN_NAME = "walletCreatedEventHandler"
-
-        const val WALLET_UPDATED_EVENT_HANDLER_SPAN_NAME = "walletUpdatedEventHandler"
-
-        const val WALLET_DELETED_EVENT_HANDLER_SPAN_NAME = "walletDeletedEventHandler"
-    }
-
-    override fun dispatchEvent(event: LoggingEvent): Mono<LoggingEvent> =
-        when (event) {
-            is WalletAddedEvent -> onWalletCreated(event).map { event }
-            is WalletDeletedEvent -> onWalletDeleted(event).map { event }
-            is WalletUpdatedEvent -> onWalletUpdated(event).map { event }
-            else -> Mono.empty()
+    fun dispatchEvent(event: BsonDocument): Mono<BsonDocument> =
+        if (event != null) {
+            onWalletEvent(event).map { event }
+        } else {
+            Mono.empty()
         }
 
-    private fun onWalletUpdated(
-        walletUpdated: WalletUpdatedEvent
-    ): Mono<Response<SendMessageResult>> =
+    private fun onWalletEvent(event: BsonDocument): Mono<Response<SendMessageResult>> =
         tracingUtils
-            .traceMonoQueue(WALLET_UPDATED_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
-                logger.info(
-                    "Handling wallet updated event for [{}], publishing to storage queue with delay of [{}]",
-                    walletUpdated.walletId,
-                    walletExpireTimeout
-                )
-                val walletDeletedEvent =
-                    WalletCreatedEvent.of(WalletId.of(walletUpdated.walletId), UPDATED_EVENT_TYPE)
+            .traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
                 walletQueueClient.sendWalletCreatedEvent(
-                    event = walletDeletedEvent,
+                    event = event,
                     delay = walletExpireTimeout,
                     tracingInfo = tracingInfo
                 )
             }
-            .doOnNext {
-                logger.info(
-                    "Successfully published message for [{}] with delay of [{}]",
-                    walletUpdated.walletId,
-                    walletExpireTimeout
-                )
-            }
-            .doOnError { logger.error("Failed to publish event for [${walletUpdated.walletId}]") }
-
-    private fun onWalletDeleted(
-        walletDeleted: WalletDeletedEvent
-    ): Mono<Response<SendMessageResult>> =
-        tracingUtils
-            .traceMonoQueue(WALLET_DELETED_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
-                logger.info(
-                    "Handling wallet deleted event for [{}], publishing to storage queue with delay of [{}]",
-                    walletDeleted.walletId,
-                    walletExpireTimeout
-                )
-                val walletDeletedEvent =
-                    WalletCreatedEvent.of(WalletId.of(walletDeleted.walletId), DELETED_EVENT_TYPE)
-                walletQueueClient.sendWalletCreatedEvent(
-                    event = walletDeletedEvent,
-                    delay = walletExpireTimeout,
-                    tracingInfo = tracingInfo
-                )
-            }
-            .doOnNext {
-                logger.info(
-                    "Successfully published message for [{}] with delay of [{}]",
-                    walletDeleted.walletId,
-                    walletExpireTimeout
-                )
-            }
-            .doOnError { logger.error("Failed to publish event for [${walletDeleted.walletId}]") }
-
-    private fun onWalletCreated(
-        walletCreated: WalletAddedEvent
-    ): Mono<Response<SendMessageResult>> =
-        tracingUtils
-            .traceMonoQueue(WALLET_CREATED_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
-                logger.info(
-                    "Handling wallet created event for [{}], publishing to storage queue with delay of [{}]",
-                    walletCreated.walletId,
-                    walletExpireTimeout
-                )
-                val walletCreatedEvent =
-                    WalletCreatedEvent.of(WalletId.of(walletCreated.walletId), ADDED_EVENT_TYPE)
-                walletQueueClient.sendWalletCreatedEvent(
-                    event = walletCreatedEvent,
-                    delay = walletExpireTimeout,
-                    tracingInfo = tracingInfo
-                )
-            }
-            .doOnNext {
-                logger.info(
-                    "Successfully published message for [{}] with delay of [{}]",
-                    walletCreated.walletId,
-                    walletExpireTimeout
-                )
-            }
-            .doOnError { logger.error("Failed to publish event for [${walletCreated.walletId}]") }
+            .doOnError { logger.error("Failed to publish event") }
 }

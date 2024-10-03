@@ -1,6 +1,6 @@
 package it.pagopa.wallet.common
 
-import it.pagopa.wallet.audit.WalletEvent
 import it.pagopa.wallet.common.tracing.QueueTracingInfo
+import org.bson.BsonDocument
 
-data class QueueEvent<T : WalletEvent>(val data: T, val tracingInfo: QueueTracingInfo)
+data class QueueEvent<T : BsonDocument>(val data: T, val tracingInfo: QueueTracingInfo)
