@@ -46,15 +46,6 @@ dependencies {
 
 kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") } }
 
-springBoot {
-  mainClass.set("it.pagopa.wallet.PagopaPaymentWalletCdcServiceApplicationKt")
-  buildInfo {
-    properties {
-      additional.set(mapOf("description" to (project.description ?: "Default description")))
-    }
-  }
-}
-
 tasks.withType<Test> { useJUnitPlatform() }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
