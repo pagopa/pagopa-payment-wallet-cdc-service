@@ -22,6 +22,7 @@ repositories {
 
 object Dependencies {
   const val ecsLoggingVersion = "1.5.0"
+  const val openTelemetryVersion = "1.37.0"
 }
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
@@ -49,6 +50,9 @@ dependencies {
   implementation("com.azure.spring:spring-cloud-azure-starter-data-cosmos")
   implementation("com.azure:azure-storage-queue")
   implementation("com.azure:azure-core-serializer-json-jackson")
+
+  // otel api
+  implementation("io.opentelemetry:opentelemetry-api:${Dependencies.openTelemetryVersion}")
 
   implementation("co.elastic.logging:logback-ecs-encoder:${Dependencies.ecsLoggingVersion}")
   compileOnly("org.projectlombok:lombok")
