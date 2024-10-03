@@ -1,5 +1,7 @@
 package it.pagopa.wallet.cdc
 
+import it.pagopa.wallet.config.ChangeStreamOptionsConfig
+import java.time.Instant
 import org.bson.BsonDocument
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,7 +17,8 @@ import reactor.core.publisher.Flux
 
 @Component
 class PaymentWalletsLogEventsStream(
-    @Autowired private val reactiveMongoTemplate: ReactiveMongoTemplate
+    @Autowired private val reactiveMongoTemplate: ReactiveMongoTemplate,
+    @Autowired private val changeStreamOptionsConfig: ChangeStreamOptionsConfig
 ) : ApplicationListener<ApplicationReadyEvent> {
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
 
@@ -27,22 +30,27 @@ class PaymentWalletsLogEventsStream(
         val flux: Flux<ChangeStreamEvent<BsonDocument>> =
             reactiveMongoTemplate
                 .changeStream(
-                    "payment-wallets-log-events",
+                    changeStreamOptionsConfig.collection,
                     ChangeStreamOptions.builder()
                         .filter(
                             Aggregation.newAggregation(
                                 Aggregation.match(
                                     Criteria.where("operationType")
-                                        .`in`("insert", "update", "replace")
+                                        .`in`(changeStreamOptionsConfig.operationType)
                                 ),
-                                Aggregation.project("fullDocument")
+                                Aggregation.project(changeStreamOptionsConfig.project)
                             )
                         )
+                        .resumeAt(Instant.now())
                         .build(),
                     BsonDocument::class.java
                 )
                 .flatMap<ChangeStreamEvent<BsonDocument>?> {
-                    logger.info("Handling new change stream event: {}", it.raw?.fullDocument?.toJson())
+                    logger.info(
+                        "Handling new change stream event of type {} for wallet with id {}",
+                        it.raw?.fullDocument?.get("_class"),
+                        it.raw?.fullDocument?.get("walletId")
+                    )
                     Flux.just(it)
                 }
                 .onErrorContinue { throwable, obj ->
