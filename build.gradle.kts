@@ -39,6 +39,7 @@ dependencyManagement {
   imports { mavenBom("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.4") }
 }
 
+
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
