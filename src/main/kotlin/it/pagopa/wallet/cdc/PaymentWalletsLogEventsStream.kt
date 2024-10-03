@@ -20,26 +20,35 @@ class PaymentWalletsLogEventsStream(
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
 
     override fun onApplicationEvent(event: ApplicationReadyEvent) {
-        this.stream()
+        this.streamPaymentWalletsLogEvents()
     }
 
-    fun stream() {
+    fun streamPaymentWalletsLogEvents() {
         val flux: Flux<ChangeStreamEvent<BsonDocument>> =
-            reactiveMongoTemplate.changeStream(
-                "payment-wallets-log-events",
-                ChangeStreamOptions.builder()
-                    .filter(
-                        Aggregation.newAggregation(
-                            Aggregation.match(
-                                Criteria.where("operationType").`in`("insert", "update", "replace")
-                            ),
-                            Aggregation.project("fullDocument")
+            reactiveMongoTemplate
+                .changeStream(
+                    "payment-wallets-log-events",
+                    ChangeStreamOptions.builder()
+                        .filter(
+                            Aggregation.newAggregation(
+                                Aggregation.match(
+                                    Criteria.where("operationType")
+                                        .`in`("insert", "update", "replace")
+                                ),
+                                Aggregation.project("fullDocument")
+                            )
                         )
-                    )
-                    .build(),
-                BsonDocument::class.java
-            )
+                        .build(),
+                    BsonDocument::class.java
+                )
+                .flatMap<ChangeStreamEvent<BsonDocument>?> {
+                    logger.info("Handling new change stream event: {}", it.raw?.fullDocument?.toJson())
+                    Flux.just(it)
+                }
+                .onErrorContinue { throwable, obj ->
+                    logger.error("Error for object {} : ", obj, throwable)
+                }
 
-        flux.subscribe { it -> logger.info(it.toString()) }
+        flux.subscribe()
     }
 }
