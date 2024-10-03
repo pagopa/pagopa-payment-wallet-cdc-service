@@ -1,0 +1,129 @@
+microservice-chart:
+  namespace: "pay-wallet"
+  nameOverride: ""
+  fullnameOverride: "pagopa-pay-wallet-cdc-service"
+  canaryDelivery:
+    create: false
+    ingress:
+      create: true
+      canary:
+        type: bluegreen
+        headerName: deployment
+        headerValue: blue
+    service:
+      create: true
+    deployment:
+      create: true
+      image:
+        repository: pagopauitncoreacr.azurecr.io/pagopapaymentwalletcdcservice
+        tag: "latest"
+        pullPolicy: Always
+      envConfig:
+        OTEL_SERVICE_NAME: "pagopa-payment-wallet-cdc-service-blue"
+        OTEL_RESOURCE_ATTRIBUTES: "service.name=pagopa-payment-wallet-cdc-service-blue,deployment.environment=uat"
+      envSecret: { }
+  image:
+    repository: pagopauitncoreacr.azurecr.io/pagopapaymentwalletcdcservice
+    tag: "0.0.0"
+    pullPolicy: Always
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 8080
+    initialDelaySeconds: 40
+    failureThreshold: 6
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 8080
+    initialDelaySeconds: 40
+    failureThreshold: 6
+    periodSeconds: 10
+  deployment:
+    create: true
+    replicas: 2
+  service:
+    create: true
+    type: ClusterIP
+    ports:
+      - 8080
+  ingress:
+    create: true
+    host: "itnuat.pay-wallet.internal.uat.platform.pagopa.it"
+    path: /pagopa-payment-wallet-cdc-service/(.*)
+    servicePort: 8080
+  serviceAccount:
+    create: false
+    annotations: { }
+    name: ""
+  podAnnotations: { }
+  podSecurityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "400m"
+    limits:
+      memory: "512Mi"
+      cpu: "600m"
+  autoscaling:
+    enable: true
+    minReplica: 2
+    maxReplica: 10
+    pollingInterval: 10 # seconds
+    cooldownPeriod: 50 # seconds
+    triggers:
+      - type: cpu
+        metadata:
+          # Required
+          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+          value: "75"
+  terminationGracePeriodSeconds: 30
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  envConfig:
+    OTEL_SERVICE_NAME: "pagopa-payment-wallet-cc-service"
+    OTEL_SERVICE_ENVIRONMENT: "uat"
+    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=uat"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "https://weuuat.kibana.internal.uat.platform.pagopa.it/apm"
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_TRACES_EXPORTER: otlp
+    OTEL_METRICS_EXPORTER: otlp
+    OTEL_LOGS_EXPORTER: otlp
+    OTEL_TRACES_SAMPLER: "always_on"
+  envSecret:
+    OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
+  keyvault:
+    name: "pagopa-u-pay-wallet-kv"
+    tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
+  nodeSelector: { }
+  tolerations:
+    - effect: "NoSchedule"
+      key: "paymentWalletOnly"
+      operator: "Equal"
+      value: "true"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: domain
+                operator: In
+                values:
+                  - paywallet
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                aadpodidbinding: pay-wallet-pod-identity
+            namespaces: [ "pay-wallet" ]
+            topologyKey: topology.kubernetes.io/zone
