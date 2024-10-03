@@ -9,14 +9,16 @@ sealed interface WalletEvent
 data class WalletCreatedEvent(
     val eventId: String,
     val creationDate: Instant,
-    val walletId: String
+    val walletId: String,
+    val type: String
 ) : WalletEvent {
     companion object {
-        fun of(walletId: WalletId) =
+        fun of(walletId: WalletId, type: String) =
             WalletCreatedEvent(
                 eventId = UUID.randomUUID().toString(),
                 creationDate = Instant.now(),
-                walletId = walletId.value.toString()
+                walletId = walletId.value.toString(),
+                type = type
             )
     }
 }
