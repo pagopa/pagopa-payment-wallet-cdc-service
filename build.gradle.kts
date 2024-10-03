@@ -39,7 +39,6 @@ dependencyManagement {
   imports { mavenBom("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.4") }
 }
 
-
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
@@ -78,7 +77,6 @@ springBoot {
 tasks.withType<Test> { useJUnitPlatform() }
 
 tasks.named<Jar>("jar") { enabled = false }
-
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
   kotlin {

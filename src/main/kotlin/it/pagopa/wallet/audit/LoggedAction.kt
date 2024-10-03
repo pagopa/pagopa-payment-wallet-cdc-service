@@ -1,6 +1,5 @@
 package it.pagopa.wallet.audit
 
-import it.pagopa.wallet.repositories.LoggingEventRepository
 import reactor.core.publisher.Mono
 
 data class LoggedAction<T : Any>(val data: T, val events: List<LoggingEvent>) {
@@ -24,10 +23,6 @@ data class LoggedAction<T : Any>(val data: T, val events: List<LoggingEvent>) {
 
     fun <R : Any> map(mapper: (T) -> R): LoggedAction<R> {
         return LoggedAction(mapper(this.data), this.events)
-    }
-
-    fun saveEvents(repository: LoggingEventRepository): Mono<T> {
-        return repository.saveAll(this.events).then(Mono.just(this.data))
     }
 }
 
