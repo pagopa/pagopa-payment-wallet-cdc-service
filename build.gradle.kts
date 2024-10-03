@@ -30,11 +30,26 @@ configurations { compileOnly { extendsFrom(configurations.annotationProcessor.ge
 
 dependencyLocking { lockAllConfigurations() }
 
+dependencyManagement {
+  imports { mavenBom("org.springframework.boot:spring-boot-dependencies:3.0.5") }
+  imports { mavenBom("com.azure.spring:spring-cloud-azure-dependencies:5.13.0") }
+  // Kotlin BOM
+  imports { mavenBom("org.jetbrains.kotlin:kotlin-bom:1.7.22") }
+  imports { mavenBom("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.4") }
+}
+
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+
+  // azure storage queue
+  implementation("com.azure.spring:spring-cloud-azure-starter")
+  implementation("com.azure.spring:spring-cloud-azure-starter-data-cosmos")
+  implementation("com.azure:azure-storage-queue")
+  implementation("com.azure:azure-core-serializer-json-jackson")
+
   implementation("co.elastic.logging:logback-ecs-encoder:${Dependencies.ecsLoggingVersion}")
   compileOnly("org.projectlombok:lombok")
   annotationProcessor("org.projectlombok:lombok")
