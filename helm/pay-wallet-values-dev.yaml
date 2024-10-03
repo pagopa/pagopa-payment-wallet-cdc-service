@@ -89,6 +89,9 @@ microservice-chart:
     MONGO_SERVER_SELECTION_TIMEOUT_MS: "2000"
     MONGO_WAITING_QUEUE_MS: "2000"
     MONGO_HEARTBEAT_FREQUENCY_MS: "5000"
+    CDC_LOG_EVENTS_COLLECTION_NAME: "payment-wallets-log-events"
+    CDC_LOG_EVENTS_OPERATION_TYPE: "insert,update,replace"
+    CDC_LOG_EVENTS_PROJECT: "fullDocument"
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     MONGO_PASSWORD: mongo-wallet-password
