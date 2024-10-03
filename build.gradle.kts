@@ -77,7 +77,8 @@ springBoot {
 
 tasks.withType<Test> { useJUnitPlatform() }
 
-tasks.withType<Test> { useJUnitPlatform() }
+tasks.named<Jar>("jar") { enabled = false }
+
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
   kotlin {
