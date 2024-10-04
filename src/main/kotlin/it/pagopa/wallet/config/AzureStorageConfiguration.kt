@@ -15,7 +15,6 @@ import reactor.netty.http.client.HttpClient
 @Configuration
 class AzureStorageConfiguration {
 
-    /** @see SerializationConfiguration */
     @Bean
     fun jsonSerializerProvider(objectMapper: ObjectMapper): JsonSerializerProvider =
         JsonSerializerProvider {

@@ -1,5 +1,6 @@
 package it.pagopa.wallet
 
+import it.pagopa.wallet.common.tracing.TracingUtils
 import it.pagopa.wallet.config.properties.ExpirationQueueConfig
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
