@@ -25,7 +25,7 @@ object Dependencies {
   const val openTelemetryVersion = "1.37.0"
 }
 
-java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+java { toolchain { languageVersion = JavaLanguageVersion.of(20) } }
 
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
 
