@@ -23,10 +23,10 @@ class PaymentWalletsLogEventsStream(
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
 
     override fun onApplicationEvent(event: ApplicationReadyEvent) {
-        this.streamPaymentWalletsLogEvents()
+        this.streamPaymentWalletsLogEvents().subscribe()
     }
 
-    fun streamPaymentWalletsLogEvents() {
+    fun streamPaymentWalletsLogEvents(): Flux<ChangeStreamEvent<BsonDocument>> {
         val flux: Flux<ChangeStreamEvent<BsonDocument>> =
             reactiveMongoTemplate
                 .changeStream(
@@ -57,6 +57,6 @@ class PaymentWalletsLogEventsStream(
                     logger.error("Error for object {} : ", obj, throwable)
                 }
 
-        flux.subscribe()
+        return flux
     }
 }
