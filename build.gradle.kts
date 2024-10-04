@@ -58,8 +58,11 @@ dependencies {
   compileOnly("org.projectlombok:lombok")
   annotationProcessor("org.projectlombok:lombok")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
+  testImplementation("org.mockito:mockito-inline")
   testImplementation("io.projectreactor:reactor-test")
-  testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+  // Kotlin dependencies
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -73,8 +76,6 @@ springBoot {
     }
   }
 }
-
-tasks.withType<Test> { useJUnitPlatform() }
 
 tasks.named<Jar>("jar") { enabled = false }
 
@@ -99,3 +100,30 @@ configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     endWithNewline()
   }
 }
+
+tasks.test {
+  useJUnitPlatform()
+  finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
+}
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test) // tests are required to run before generating the report
+
+  classDirectories.setFrom(
+    files(
+      classDirectories.files.map {
+        fileTree(it).matching {
+          exclude("it/pagopa/wallet/PagopaPaymentWalletCdcServiceApplicationKt.class")
+        }
+      }
+    )
+  )
+
+  reports { xml.required.set(true) }
+}
+
+/**
+ * Task used to expand application properties with build specific properties such as artifact name
+ * and version
+ */
+tasks.processResources { filesMatching("application.properties") { expand(project.properties) } }
