@@ -64,12 +64,8 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("org.mockito:mockito-inline")
   testImplementation("io.projectreactor:reactor-test")
-<<<<<<< HEAD
   // Kotlin dependencies
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-=======
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
->>>>>>> main
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
@@ -130,13 +126,7 @@ tasks.jacocoTestReport {
   classDirectories.setFrom(
     files(
       classDirectories.files.map {
-<<<<<<< HEAD
-        fileTree(it).matching {
-          exclude("it/pagopa/wallet/PagopaPaymentWalletCdcServiceApplicationKt.class")
-        }
-=======
         fileTree(it).matching { exclude("it/pagopa/wallet/WalletApplicationKt.class") }
->>>>>>> main
       }
     )
   )
