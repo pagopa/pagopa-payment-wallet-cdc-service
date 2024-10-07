@@ -10,6 +10,7 @@ plugins {
   id("org.springframework.boot") version "3.3.4"
   id("io.spring.dependency-management") version "1.1.6"
   id("com.diffplug.spotless") version "6.18.0"
+  id("org.sonarqube") version "4.0.0.2929"
   id("com.dipien.semantic-version") version "2.0.0" apply false
   jacoco
   application
@@ -32,6 +33,8 @@ dependencyLocking { lockAllConfigurations() }
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+  implementation("org.springframework.boot:spring-boot-starter-actuator")
+  implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
@@ -41,6 +44,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("io.projectreactor:reactor-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -80,3 +84,28 @@ configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     endWithNewline()
   }
 }
+
+tasks.test {
+  useJUnitPlatform()
+  finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
+}
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test) // tests are required to run before generating the report
+
+  classDirectories.setFrom(
+    files(
+      classDirectories.files.map {
+        fileTree(it).matching { exclude("it/pagopa/wallet/WalletApplicationKt.class") }
+      }
+    )
+  )
+
+  reports { xml.required.set(true) }
+}
+
+/**
+ * Task used to expand application properties with build specific properties such as artifact name
+ * and version
+ */
+tasks.processResources { filesMatching("application.properties") { expand(project.properties) } }
