@@ -62,7 +62,7 @@ class PaymentWalletsLogEventsStream(
                         .retryWhen(
                             Retry.fixedDelay(
                                     retrySendPolicyConfig.maxAttempts,
-                                    Duration.ofMillis(retrySendPolicyConfig.intervalInMillis)
+                                    Duration.ofMillis(retrySendPolicyConfig.intervalInMs)
                                 )
                                 .filter { t -> t is Exception }
                         )

@@ -80,8 +80,10 @@ If you want to customize the application environment, reference this table:
 | APP_LOGGING_LEVEL                 | it.pagopa logger level                                                                                                                                     | string            | INFO    |
 | WEB_LOGGING_LEVEL                 | Web logger level                                                                                                                                           | string            | DEBUG   |
 | CDC_LOG_EVENTS_COLLECTION_NAME    | The name of the collection the CDC will listen to                                                                                                          | string            |         |
-| CDC_LOG_EVENTS_OPERATION_TYPE     | List list of operation type the CDC will handle                                                                                                            | list of strings   |         |
+| CDC_LOG_EVENTS_OPERATION_TYPE     | List of operation type the CDC will handle                                                                                                                 | list of strings   |         |
 | CDC_LOG_EVENTS_PROJECT            | The field provided by the change stream event                                                                                                              | string            |         |
+| CDC_SEND_RETRY_MAX_ATTEMPTS       | Max configurable attempts for performing the logic business related to a change event                                                                      | long              |         |
+| CDC_SEND_RETRY_INTERVAL_IN_MS     | Configurable interval in milliseconds between retries attempts                                                                                             | long              |         |
 
 (*): for Mongo connection string options
 see [docs](https://www.mongodb.com/docs/drivers/java/sync/v4.3/fundamentals/connection/connection-options/#connection-options)

@@ -93,7 +93,7 @@ microservice-chart:
     CDC_LOG_EVENTS_OPERATION_TYPE: "insert,update,replace"
     CDC_LOG_EVENTS_PROJECT: "fullDocument"
     CDC_SEND_RETRY_MAX_ATTEMPTS: 1
-    CDC_SEND_RETRY_INTERVAL_IN_MILLIS: 1000
+    CDC_SEND_RETRY_INTERVAL_IN_MS: 1000
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     MONGO_PASSWORD: mongo-wallet-password
