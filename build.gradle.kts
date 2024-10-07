@@ -25,7 +25,7 @@ object Dependencies {
   const val openTelemetryVersion = "1.37.0"
 }
 
-java { toolchain { languageVersion = JavaLanguageVersion.of(20) } }
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
 
@@ -62,8 +62,11 @@ dependencies {
   testImplementation("io.projectreactor:reactor-test")
   // Kotlin dependencies
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+  // Byte Buddy
+  implementation("net.bytebuddy:byte-buddy:1.15.3")
 }
 
 kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") } }
