@@ -98,8 +98,8 @@ microservice-chart:
     OTEL_METRICS_EXPORTER: otlp
     OTEL_LOGS_EXPORTER: otlp
     OTEL_TRACES_SAMPLER: "always_on"
-    MONGO_HOST: pagopa-d-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
-    MONGO_USERNAME: pagopa-d-itn-pay-wallet-cosmos-account
+    MONGO_HOST: pagopa-u-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
+    MONGO_USERNAME: pagopa-u-itn-pay-wallet-cosmos-account
     MONGO_PORT: "10255"
     MONGO_SSL_ENABLED: "true"
     MONGO_DB_NAME: "payment-wallet"
