@@ -83,3 +83,28 @@ configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     endWithNewline()
   }
 }
+
+tasks.test {
+  useJUnitPlatform()
+  finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
+}
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test) // tests are required to run before generating the report
+
+  classDirectories.setFrom(
+    files(
+      classDirectories.files.map {
+        fileTree(it).matching { exclude("it/pagopa/wallet/WalletApplicationKt.class") }
+      }
+    )
+  )
+
+  reports { xml.required.set(true) }
+}
+
+/**
+ * Task used to expand application properties with build specific properties such as artifact name
+ * and version
+ */
+tasks.processResources { filesMatching("application.properties") { expand(project.properties) } }
