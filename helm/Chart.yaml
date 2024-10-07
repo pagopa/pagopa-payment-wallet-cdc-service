@@ -1,6 +1,6 @@
 apiVersion: v2
-name: wallet
-description: Microservice that handles crud operations on wallet resources
+name: cdc-wallet
+description: Microservice that implements the change data capture on wallet database
 type: application
 version: 1.0.2
 appVersion: 1.0.2
