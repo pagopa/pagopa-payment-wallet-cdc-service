@@ -11,6 +11,7 @@ plugins {
   id("io.spring.dependency-management") version "1.1.6"
   id("com.diffplug.spotless") version "6.18.0"
   id("com.dipien.semantic-version") version "2.0.0" apply false
+  id("org.sonarqube") version "4.0.0.2929"
   jacoco
   application
 }
@@ -62,7 +63,7 @@ dependencies {
   testImplementation("io.projectreactor:reactor-test")
   // Kotlin dependencies
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
   // Byte Buddy
