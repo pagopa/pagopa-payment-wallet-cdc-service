@@ -63,4 +63,22 @@ class PaymentWalletsLogEventsStreamTest {
             .expectNext(expectedDocument)
             .verifyComplete()
     }
+
+    @Test
+    fun `change stream throws error but continues to listen`() {
+        val bsonDocumentFlux =
+            Flux.error<ChangeStreamEvent<BsonDocument>>(IllegalArgumentException())
+
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willReturn(bsonDocumentFlux)
+
+        StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
+            .verifyComplete()
+    }
 }
