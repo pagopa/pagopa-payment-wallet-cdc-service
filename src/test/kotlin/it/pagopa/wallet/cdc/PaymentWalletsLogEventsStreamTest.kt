@@ -100,7 +100,7 @@ class PaymentWalletsLogEventsStreamTest {
                 BsonDocument::class.java,
                 mongoConverter
             )
-        val bsonDocumentFlux = Flux.just(expectedMockDocument).concatWithValues(expectedDocument)
+        val bsonDocumentFlux = Flux.just(expectedDocument, expectedMockDocument, expectedDocument)
 
         given {
                 reactiveMongoTemplate.changeStream(
@@ -116,7 +116,7 @@ class PaymentWalletsLogEventsStreamTest {
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .recordWith { ArrayList() }
             .thenConsumeWhile { it.raw?.fullDocument != null }
-            .expectRecordedMatches { it.size == 1 }
+            .expectRecordedMatches { it.size == 2 }
             .verifyComplete()
     }
 }
