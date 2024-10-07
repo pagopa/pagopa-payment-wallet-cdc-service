@@ -10,6 +10,7 @@ plugins {
   id("org.springframework.boot") version "3.3.4"
   id("io.spring.dependency-management") version "1.1.6"
   id("com.diffplug.spotless") version "6.18.0"
+  id("org.sonarqube") version "4.0.0.2929"
   id("com.dipien.semantic-version") version "2.0.0" apply false
   jacoco
   application
@@ -43,7 +44,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("io.projectreactor:reactor-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
