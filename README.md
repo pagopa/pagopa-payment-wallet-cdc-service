@@ -60,34 +60,28 @@ to get a good default configuration.
 
 If you want to customize the application environment, reference this table:
 
-| Variable name                                            | Description                                                                                                                                                | type                     | default |
-|----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|---------|
-| MONGO_HOST                                               | Host where MongoDB instance used to persist wallet data                                                                                                    | hostname (string)        |         |
-| MONGO_PORT                                               | Port where MongoDB is bound to in MongoDB host                                                                                                             | number                   |         |
-| MONGO_USERNAME                                           | MongoDB username used to connect to the database                                                                                                           | string                   |         |
-| MONGO_PASSWORD                                           | MongoDB password used to connect to the database                                                                                                           | string                   |         |
-| MONGO_SSL_ENABLED                                        | Whether SSL is enabled while connecting to MongoDB                                                                                                         | string                   |         |
-| MONGO_DB_NAME                                            | Mongo database name                                                                                                                                        | string                   |         |
-| MONGO_MIN_POOL_SIZE                                      | Min amount of connections to be retained into connection pool. See docs *                                                                                  | string                   |         |
-| MONGO_MAX_POOL_SIZE                                      | Max amount of connections to be retained into connection pool.See docs *                                                                                   | string                   |         |
-| MONGO_MAX_IDLE_TIMEOUT_MS                                | Max timeout after which an idle connection is killed in milliseconds. See docs *                                                                           | string                   |         |
-| MONGO_CONNECTION_TIMEOUT_MS                              | Max time to wait for a connection to be opened. See docs *                                                                                                 | string                   |         |
-| MONGO_SOCKET_TIMEOUT_MS                                  | Max time to wait for a command send or receive before timing out. See docs *                                                                               | string                   |         |
-| MONGO_SERVER_SELECTION_TIMEOUT_MS                        | Max time to wait for a server to be selected while performing a communication with Mongo in milliseconds. See docs *                                       | string                   |         |
-| MONGO_WAITING_QUEUE_MS                                   | Max time a thread has to wait for a connection to be available in milliseconds. See docs *                                                                 | string                   |         |
-| MONGO_HEARTBEAT_FREQUENCY_MS                             | Hearth beat frequency in milliseconds. This is an hello command that is sent periodically on each active connection to perform an health check. See docs * | string                   |         |
-| ROOT_LOGGING_LEVEL                                       | Application root logger level                                                                                                                              | string                   | INFO    |
-| APP_LOGGING_LEVEL                                        | it.pagopa logger level                                                                                                                                     | string                   | INFO    |
-| WEB_LOGGING_LEVEL                                        | Web logger level                                                                                                                                           | string                   | DEBUG   |
-| REDIS_HOST                                               | Redis host name                                                                                                                                            | string                   |         |
-| REDIS_PASSWORD                                           | Redis password                                                                                                                                             | string                   |         |
-| REDIS_PORT                                               | Redis port                                                                                                                                                 | string                   |         |
-| REDIS_SSL_ENABLED                                        | Whether SSL is enabled while connecting to  Redis                                                                                                          | string                   |         |
-| WALLET_SESSION_TTL_SECONDS                               | Wallet session TTL in seconds                                                                                                                              | int                      |         |
-| EXPIRATION_QUEUE_NAME                                    | Name of expiration queue                                                                                                                                   | string                   |         |
-| EXPIRATION_QUEUE_TTL_SECONDS                             | TTL in seconds for published message                                                                                                                       | string                   |         |
-| EXPIRATION_QUEUE_CONNECTION_STRING                       | Connection string to storage queue                                                                                                                         | string                   |         |
-| EXPIRATION_QUEUE_VISIBILITY_TIMEOUT_SEC                  | Visibility timeout in seconds for expired event                                                                                                            |                          |         |
+| Variable name                     | Description                                                                                                                                                | type              | default |
+|-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|---------|
+| MONGO_HOST                        | Host where MongoDB instance used to persist wallet data                                                                                                    | hostname (string) |         |
+| MONGO_PORT                        | Port where MongoDB is bound to in MongoDB host                                                                                                             | number            |         |
+| MONGO_USERNAME                    | MongoDB username used to connect to the database                                                                                                           | string            |         |
+| MONGO_PASSWORD                    | MongoDB password used to connect to the database                                                                                                           | string            |         |
+| MONGO_SSL_ENABLED                 | Whether SSL is enabled while connecting to MongoDB                                                                                                         | string            |         |
+| MONGO_DB_NAME                     | Mongo database name                                                                                                                                        | string            |         |
+| MONGO_MIN_POOL_SIZE               | Min amount of connections to be retained into connection pool. See docs *                                                                                  | string            |         |
+| MONGO_MAX_POOL_SIZE               | Max amount of connections to be retained into connection pool.See docs *                                                                                   | string            |         |
+| MONGO_MAX_IDLE_TIMEOUT_MS         | Max timeout after which an idle connection is killed in milliseconds. See docs *                                                                           | string            |         |
+| MONGO_CONNECTION_TIMEOUT_MS       | Max time to wait for a connection to be opened. See docs *                                                                                                 | string            |         |
+| MONGO_SOCKET_TIMEOUT_MS           | Max time to wait for a command send or receive before timing out. See docs *                                                                               | string            |         |
+| MONGO_SERVER_SELECTION_TIMEOUT_MS | Max time to wait for a server to be selected while performing a communication with Mongo in milliseconds. See docs *                                       | string            |         |
+| MONGO_WAITING_QUEUE_MS            | Max time a thread has to wait for a connection to be available in milliseconds. See docs *                                                                 | string            |         |
+| MONGO_HEARTBEAT_FREQUENCY_MS      | Hearth beat frequency in milliseconds. This is an hello command that is sent periodically on each active connection to perform an health check. See docs * | string            |         |
+| ROOT_LOGGING_LEVEL                | Application root logger level                                                                                                                              | string            | INFO    |
+| APP_LOGGING_LEVEL                 | it.pagopa logger level                                                                                                                                     | string            | INFO    |
+| WEB_LOGGING_LEVEL                 | Web logger level                                                                                                                                           | string            | DEBUG   |
+| CDC_LOG_EVENTS_COLLECTION_NAME    | The name of the collection the CDC will listen to                                                                                                          | string            |         |
+| CDC_LOG_EVENTS_OPERATION_TYPE     | List list of operation type the CDC will handle                                                                                                            | list of strings   |         |
+| CDC_LOG_EVENTS_PROJECT            | The field provided by the change stream event                                                                                                              | string            |         |
 
 (*): for Mongo connection string options
 see [docs](https://www.mongodb.com/docs/drivers/java/sync/v4.3/fundamentals/connection/connection-options/#connection-options)
@@ -106,7 +100,7 @@ $ docker compose up --build
 
 - git
 - gradle
-- jdk-17
+- jdk-21
 
 ### Run the project
 
