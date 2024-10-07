@@ -60,7 +60,9 @@ to get a good default configuration.
 
 If you want to customize the application environment, reference this table:
 
+
 | Variable name                                            | Description                                                                                                                                                | type                     | default |
+
 |----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|---------|
 | MONGO_HOST                                               | Host where MongoDB instance used to persist wallet data                                                                                                    | hostname (string)        |         |
 | MONGO_PORT                                               | Port where MongoDB is bound to in MongoDB host                                                                                                             | number                   |         |
@@ -88,6 +90,11 @@ If you want to customize the application environment, reference this table:
 | EXPIRATION_QUEUE_TTL_SECONDS                             | TTL in seconds for published message                                                                                                                       | string                   |         |
 | EXPIRATION_QUEUE_CONNECTION_STRING                       | Connection string to storage queue                                                                                                                         | string                   |         |
 | EXPIRATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS              | Visibility timeout in seconds for expired event                                                                                                            |                          |         |
+| CDC_LOG_EVENTS_COLLECTION_NAME                           | The name of the collection the CDC will listen to                                                                                                          | string                   |         |
+| CDC_LOG_EVENTS_OPERATION_TYPE                            | List of operation type the CDC will handle                                                                                                                 | list of strings          |         |
+| CDC_LOG_EVENTS_PROJECT                                   | The field provided by the change stream event                                                                                                              | string                   |         |
+| CDC_SEND_RETRY_MAX_ATTEMPTS                              | Max configurable attempts for performing the logic business related to a change event                                                                      | long                     |         |
+| CDC_SEND_RETRY_INTERVAL_IN_MS                            | Configurable interval in milliseconds between retries attempts                                                                                             | long                     |         |
 
 (*): for Mongo connection string options
 see [docs](https://www.mongodb.com/docs/drivers/java/sync/v4.3/fundamentals/connection/connection-options/#connection-options)
@@ -106,7 +113,7 @@ $ docker compose up --build
 
 - git
 - gradle
-- jdk-17
+- jdk-21
 
 ### Run the project
 

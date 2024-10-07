@@ -10,6 +10,7 @@ plugins {
   id("org.springframework.boot") version "3.3.4"
   id("io.spring.dependency-management") version "1.1.6"
   id("com.diffplug.spotless") version "6.18.0"
+  id("org.sonarqube") version "4.0.0.2929"
   id("com.dipien.semantic-version") version "2.0.0" apply false
   id("org.sonarqube") version "4.0.0.2929"
   jacoco
@@ -42,6 +43,8 @@ dependencyManagement {
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+  implementation("org.springframework.boot:spring-boot-starter-actuator")
+  implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
@@ -61,8 +64,12 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("org.mockito:mockito-inline")
   testImplementation("io.projectreactor:reactor-test")
+<<<<<<< HEAD
   // Kotlin dependencies
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
+=======
+  testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+>>>>>>> main
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
@@ -116,9 +123,13 @@ tasks.jacocoTestReport {
   classDirectories.setFrom(
     files(
       classDirectories.files.map {
+<<<<<<< HEAD
         fileTree(it).matching {
           exclude("it/pagopa/wallet/PagopaPaymentWalletCdcServiceApplicationKt.class")
         }
+=======
+        fileTree(it).matching { exclude("it/pagopa/wallet/WalletApplicationKt.class") }
+>>>>>>> main
       }
     )
   )
