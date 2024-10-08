@@ -60,10 +60,9 @@ class PaymentWalletsLogEventsStream(
                                 it.raw?.fullDocument?.get("_class"),
                                 it.raw?.fullDocument?.get("walletId")
                             )
-                            val document = it.raw?.fullDocument?.let { doc -> doc.toBsonDocument() }
-                            if (document != null) {
-                                walletPaymentCDCEventDispatcherService.dispatchEvent(document)
-                            }
+                            walletPaymentCDCEventDispatcherService.dispatchEvent(
+                                it.raw?.fullDocument?.toBsonDocument()
+                            )
                             Mono.just(it)
                         }
                         .retryWhen(
