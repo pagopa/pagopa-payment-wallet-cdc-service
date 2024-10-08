@@ -78,7 +78,7 @@ microservice-chart:
     OTEL_TRACES_SAMPLER: "always_on"
     EXPIRATION_CDC_QUEUE_NAME: pagopa-d-itn-pay-wallet-cdc-queue
     EXPIRATION_QUEUE_TTL_SECONDS: "7200"
-    EXPIRATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS: "0"
+    CDC_QUEUE_VISIBILITY_TIMEOUT_SECONDS: "0"
     MONGO_HOST: pagopa-d-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
     MONGO_USERNAME: pagopa-d-itn-pay-wallet-cosmos-account
     MONGO_PORT: "10255"
