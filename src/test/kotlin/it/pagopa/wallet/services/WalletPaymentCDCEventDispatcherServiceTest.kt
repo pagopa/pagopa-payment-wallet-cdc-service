@@ -29,7 +29,7 @@ class WalletPaymentCDCEventDispatcherServiceTest {
 
     @BeforeEach
     fun setup() {
-        given { walletQueueClient.sendWalletCreatedEvent(any(), any(), any()) }
+        given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
             .willAnswer { AzureQueueTestUtils.QUEUE_SUCCESSFUL_RESPONSE }
     }
 
@@ -47,7 +47,7 @@ class WalletPaymentCDCEventDispatcherServiceTest {
 
         argumentCaptor<BsonDocument> {
             verify(walletQueueClient, times(1))
-                .sendWalletCreatedEvent(
+                .sendWalletEvent(
                     capture(),
                     eq(Duration.ofSeconds(config.timeoutWalletExpired)),
                     any()
@@ -65,7 +65,7 @@ class WalletPaymentCDCEventDispatcherServiceTest {
         val walletId = UUID.randomUUID().toString()
         val walletCreatedLoggingEvent =
             BsonDocument().apply { append("walletId", BsonString(walletId)) }
-        given { walletQueueClient.sendWalletCreatedEvent(any(), any(), any()) }
+        given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
             .willAnswer {
                 Mono.error<Response<SendMessageResult>>(RuntimeException("Fail to publish message"))
             }

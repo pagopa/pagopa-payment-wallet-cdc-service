@@ -17,7 +17,7 @@ class WalletQueueClient(
     private val ttl: Duration
 ) {
 
-    fun sendWalletCreatedEvent(
+    fun sendWalletEvent(
         event: BsonDocument,
         delay: Duration,
         tracingInfo: QueueTracingInfo

@@ -34,7 +34,7 @@ class WalletPaymentCDCEventDispatcherService(
     private fun onWalletEvent(event: BsonDocument): Mono<Response<SendMessageResult>> =
         tracingUtils
             .traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
-                walletQueueClient.sendWalletCreatedEvent(
+                walletQueueClient.sendWalletEvent(
                     event = event,
                     delay = walletExpireTimeout,
                     tracingInfo = tracingInfo
