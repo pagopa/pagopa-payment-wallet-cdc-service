@@ -101,8 +101,8 @@ microservice-chart:
     EXPIRATION_QUEUE_NAME: pagopa-d-itn-pay-wallet-cdc-queue
     EXPIRATION_QUEUE_TTL_SECONDS: "3600"
     EXPIRATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS: "1800"
-    MONGO_HOST: pagopa-d-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
-    MONGO_USERNAME: pagopa-d-itn-pay-wallet-cosmos-account
+    MONGO_HOST: pagopa-u-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
+    MONGO_USERNAME: pagopa-u-itn-pay-wallet-cosmos-account
     MONGO_PORT: "10255"
     MONGO_SSL_ENABLED: "true"
     MONGO_DB_NAME: "payment-wallet"
