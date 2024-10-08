@@ -23,7 +23,9 @@ import reactor.util.retry.Retry
 class PaymentWalletsLogEventsStream(
     @Autowired private val reactiveMongoTemplate: ReactiveMongoTemplate,
     @Autowired private val changeStreamOptionsConfig: ChangeStreamOptionsConfig,
-    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig
+    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig,
+    @Autowired
+    private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService
 ) : ApplicationListener<ApplicationReadyEvent> {
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
 
@@ -56,6 +58,9 @@ class PaymentWalletsLogEventsStream(
                                 "Handling new change stream event of type {} for wallet with id {}",
                                 it.raw?.fullDocument?.get("_class"),
                                 it.raw?.fullDocument?.get("walletId")
+                            )
+                            walletPaymentCDCEventDispatcherService.dispatchEvent(
+                                it.raw?.fullDocument
                             )
                             Mono.just(it)
                         }
