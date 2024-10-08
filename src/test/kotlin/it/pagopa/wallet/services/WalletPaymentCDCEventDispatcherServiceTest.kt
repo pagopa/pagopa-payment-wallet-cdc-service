@@ -5,7 +5,7 @@ import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracedMono
 import it.pagopa.wallet.common.tracing.TracingUtilsTest
-import it.pagopa.wallet.config.properties.ExpirationCdcQueueConfig
+import it.pagopa.wallet.config.properties.CdcQueueConfig
 import it.pagopa.wallet.util.AzureQueueTestUtils
 import java.time.Duration
 import java.util.*
@@ -20,7 +20,7 @@ import reactor.kotlin.test.test
 
 class WalletPaymentCDCEventDispatcherServiceTest {
 
-    private val config = ExpirationCdcQueueConfig("", "", 100, 100)
+    private val config = CdcQueueConfig("", "", 100, 100)
 
     private val walletQueueClient: WalletQueueClient = mock()
     private val tracingUtils = TracingUtilsTest.getMock()
