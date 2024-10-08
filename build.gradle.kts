@@ -12,7 +12,6 @@ plugins {
   id("com.diffplug.spotless") version "6.18.0"
   id("org.sonarqube") version "4.0.0.2929"
   id("com.dipien.semantic-version") version "2.0.0" apply false
-  id("org.sonarqube") version "4.0.0.2929"
   jacoco
   application
 }
@@ -34,7 +33,7 @@ configurations { compileOnly { extendsFrom(configurations.annotationProcessor.ge
 dependencyLocking { lockAllConfigurations() }
 
 dependencyManagement {
-  imports { mavenBom("org.springframework.boot:spring-boot-dependencies:3.0.5") }
+  imports { mavenBom("org.springframework.boot:spring-boot-dependencies:3.3.4") }
   imports { mavenBom("com.azure.spring:spring-cloud-azure-dependencies:5.13.0") }
   // Kotlin BOM
   imports { mavenBom("org.jetbrains.kotlin:kotlin-bom:1.7.22") }
@@ -48,26 +47,24 @@ dependencies {
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+  implementation("co.elastic.logging:logback-ecs-encoder:${Dependencies.ecsLoggingVersion}")
+  compileOnly("org.projectlombok:lombok")
+  annotationProcessor("org.projectlombok:lombok")
 
-  // azure storage queue
-  implementation("com.azure.spring:spring-cloud-azure-starter")
-  implementation("com.azure.spring:spring-cloud-azure-starter-data-cosmos")
-  implementation("com.azure:azure-storage-queue")
-  implementation("com.azure:azure-core-serializer-json-jackson")
+  // tests
+  testImplementation("org.springframework.boot:spring-boot-starter-test")
+  testImplementation("io.projectreactor:reactor-test")
+  testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
   // otel api
   implementation("io.opentelemetry:opentelemetry-api:${Dependencies.openTelemetryVersion}")
 
-  implementation("co.elastic.logging:logback-ecs-encoder:${Dependencies.ecsLoggingVersion}")
-  compileOnly("org.projectlombok:lombok")
-  annotationProcessor("org.projectlombok:lombok")
-  testImplementation("org.springframework.boot:spring-boot-starter-test")
-  testImplementation("org.mockito:mockito-inline")
-  testImplementation("io.projectreactor:reactor-test")
-  // Kotlin dependencies
-  testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+  // azure storage queue
+  implementation("com.azure.spring:spring-cloud-azure-starter")
+  implementation("com.azure:azure-storage-queue")
+  implementation("com.azure:azure-core-serializer-json-jackson")
 
   // Byte Buddy
   implementation("net.bytebuddy:byte-buddy:1.15.3")
@@ -83,6 +80,8 @@ springBoot {
     }
   }
 }
+
+tasks.withType<Test> { useJUnitPlatform() }
 
 tasks.named<Jar>("jar") { enabled = false }
 
@@ -126,7 +125,9 @@ tasks.jacocoTestReport {
   classDirectories.setFrom(
     files(
       classDirectories.files.map {
-        fileTree(it).matching { exclude("it/pagopa/wallet/WalletApplicationKt.class") }
+        fileTree(it).matching {
+          exclude("it/pagopa/wallet/PagopaPaymentWalletCdcServiceApplicationKt.class")
+        }
       }
     )
   )
