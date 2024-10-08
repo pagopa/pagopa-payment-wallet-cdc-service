@@ -2,8 +2,10 @@ package it.pagopa.wallet.cdc
 
 import it.pagopa.wallet.config.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.RetrySendPolicyConfig
+import it.pagopa.wallet.services.ResumePolicyService
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.absoluteValue
 import org.bson.BsonDocument
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,7 +25,8 @@ import reactor.util.retry.Retry
 class PaymentWalletsLogEventsStream(
     @Autowired private val reactiveMongoTemplate: ReactiveMongoTemplate,
     @Autowired private val changeStreamOptionsConfig: ChangeStreamOptionsConfig,
-    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig
+    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig,
+    @Autowired private val redisResumePolicyService: ResumePolicyService
 ) : ApplicationListener<ApplicationReadyEvent> {
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
 
@@ -46,16 +49,18 @@ class PaymentWalletsLogEventsStream(
                                 Aggregation.project(changeStreamOptionsConfig.project)
                             )
                         )
-                        .resumeAt(Instant.now())
+                        .resumeAt(redisResumePolicyService.getResumeTimestamp())
                         .build(),
                     BsonDocument::class.java
                 )
+                // Process the elements of the Flux
                 .flatMap {
                     Mono.defer {
                             logger.info(
-                                "Handling new change stream event of type {} for wallet with id {}",
+                                "Handling new change stream event of type {} for wallet with id {} created on {}",
                                 it.raw?.fullDocument?.get("_class"),
-                                it.raw?.fullDocument?.get("walletId")
+                                it.raw?.fullDocument?.get("walletId"),
+                                it.raw?.fullDocument?.get("timestamp")
                             )
                             Mono.just(it)
                         }
@@ -71,6 +76,21 @@ class PaymentWalletsLogEventsStream(
                             Mono.empty<ChangeStreamEvent<BsonDocument>>()
                         }
                 }
+                // Save resume token every n emitted elements
+                .index()
+                .flatMap {
+                    Mono.defer {
+                            if (it.t1.absoluteValue.plus(1).mod(1) == 0) {
+                                redisResumePolicyService.saveResumeTimestamp(Instant.now())
+                            }
+                            Mono.just(it.t2)
+                        }
+                        .onErrorResume {
+                            logger.error("Error saving resume policy: ", it)
+                            Mono.empty<ChangeStreamEvent<BsonDocument>>()
+                        }
+                }
+                .doOnError { logger.info("Error listening to change stream: ", it) }
 
         return flux
     }

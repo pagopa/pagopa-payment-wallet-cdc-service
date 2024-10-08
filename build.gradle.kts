@@ -35,10 +35,12 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("co.elastic.logging:logback-ecs-encoder:${Dependencies.ecsLoggingVersion}")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
   compileOnly("org.projectlombok:lombok")
   annotationProcessor("org.projectlombok:lombok")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -46,6 +48,14 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+configurations {
+  implementation.configure {
+    exclude(module = "spring-boot-starter-web")
+    exclude("org.apache.tomcat")
+    exclude(group = "org.slf4j", module = "slf4j-simple")
+  }
 }
 
 kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") } }

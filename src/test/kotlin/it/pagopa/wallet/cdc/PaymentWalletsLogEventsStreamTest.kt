@@ -3,6 +3,8 @@ package it.pagopa.wallet.cdc
 import com.mongodb.client.model.changestream.ChangeStreamDocument
 import it.pagopa.wallet.config.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.RetrySendPolicyConfig
+import it.pagopa.wallet.services.ResumePolicyService
+import java.time.Instant
 import org.bson.BsonDocument
 import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
@@ -21,6 +23,7 @@ import reactor.test.StepVerifier
 @TestPropertySource(locations = ["classpath:application-test.properties"])
 class PaymentWalletsLogEventsStreamTest {
     private val reactiveMongoTemplate: ReactiveMongoTemplate = mock()
+    private val resumePolicyService: ResumePolicyService = mock()
     private val retrySendPolicyConfig: RetrySendPolicyConfig = RetrySendPolicyConfig(1, 100)
     private val changeStreamOptionsConfig: ChangeStreamOptionsConfig =
         ChangeStreamOptionsConfig("collection", ArrayList(), "project")
@@ -33,7 +36,8 @@ class PaymentWalletsLogEventsStreamTest {
             PaymentWalletsLogEventsStream(
                 reactiveMongoTemplate,
                 changeStreamOptionsConfig,
-                retrySendPolicyConfig
+                retrySendPolicyConfig,
+                resumePolicyService
             )
     }
 
@@ -70,6 +74,10 @@ class PaymentWalletsLogEventsStreamTest {
                 )
             }
             .willReturn(bsonDocumentFlux)
+
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+
+        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .expectNext(expectedDocument)
@@ -110,6 +118,10 @@ class PaymentWalletsLogEventsStreamTest {
                 )
             }
             .willReturn(bsonDocumentFlux)
+
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+
+        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
         given { expectedMockDocument.raw }.willThrow(IllegalArgumentException())
 
