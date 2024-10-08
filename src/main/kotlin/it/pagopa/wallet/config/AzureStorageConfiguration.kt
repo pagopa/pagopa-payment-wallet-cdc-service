@@ -22,7 +22,7 @@ class AzureStorageConfiguration {
         }
 
     @Bean
-    fun expirationCdcQueueClient(
+    fun cdcQueueClient(
         cdcQueueConfig: CdcQueueConfig,
         jsonSerializerProvider: JsonSerializerProvider
     ): WalletQueueClient {

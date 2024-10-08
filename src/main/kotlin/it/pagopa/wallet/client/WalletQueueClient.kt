@@ -12,7 +12,7 @@ import org.bson.BsonDocument
 import reactor.core.publisher.Mono
 
 class WalletQueueClient(
-    private val expirationCdcQueueClient: QueueAsyncClient,
+    private val cdcQueueClient: QueueAsyncClient,
     private val jsonSerializer: JsonSerializer,
     private val ttl: Duration
 ) {
@@ -24,7 +24,7 @@ class WalletQueueClient(
     ): Mono<Response<SendMessageResult>> {
         val queueEvent = QueueEvent(event, tracingInfo)
         return BinaryData.fromObjectAsync(queueEvent, jsonSerializer).flatMap {
-            expirationCdcQueueClient.sendMessageWithResponse(it, delay, ttl)
+            cdcQueueClient.sendMessageWithResponse(it, delay, ttl)
         }
     }
 }
