@@ -1,7 +1,5 @@
 package it.pagopa.wallet.services
 
-import com.azure.core.http.rest.Response
-import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracingUtils
 import it.pagopa.wallet.config.properties.CdcQueueConfig
@@ -25,13 +23,6 @@ class WalletPaymentCDCEventDispatcherService(
     private val walletExpireTimeout = Duration.ofSeconds(cdcQueueConfig.timeoutWalletExpired)
 
     fun dispatchEvent(event: BsonDocument): Mono<BsonDocument> =
-        if (event != null) {
-            onWalletEvent(event).map { event }
-        } else {
-            Mono.empty()
-        }
-
-    private fun onWalletEvent(event: BsonDocument): Mono<Response<SendMessageResult>> =
         tracingUtils
             .traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
                 walletQueueClient.sendWalletEvent(
@@ -40,5 +31,6 @@ class WalletPaymentCDCEventDispatcherService(
                     tracingInfo = tracingInfo
                 )
             }
+            .map { event }
             .doOnError { logger.error("Failed to publish event") }
 }

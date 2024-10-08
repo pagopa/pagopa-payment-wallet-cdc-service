@@ -3,6 +3,7 @@ package it.pagopa.wallet.cdc
 import com.mongodb.client.model.changestream.ChangeStreamDocument
 import it.pagopa.wallet.config.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.RetrySendPolicyConfig
+import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import org.bson.BsonDocument
 import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
@@ -21,6 +22,8 @@ import reactor.test.StepVerifier
 @TestPropertySource(locations = ["classpath:application-test.properties"])
 class PaymentWalletsLogEventsStreamTest {
     private val reactiveMongoTemplate: ReactiveMongoTemplate = mock()
+    private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService =
+        mock()
     private val retrySendPolicyConfig: RetrySendPolicyConfig = RetrySendPolicyConfig(1, 100)
     private val changeStreamOptionsConfig: ChangeStreamOptionsConfig =
         ChangeStreamOptionsConfig("collection", ArrayList(), "project")
@@ -33,7 +36,8 @@ class PaymentWalletsLogEventsStreamTest {
             PaymentWalletsLogEventsStream(
                 reactiveMongoTemplate,
                 changeStreamOptionsConfig,
-                retrySendPolicyConfig
+                retrySendPolicyConfig,
+                walletPaymentCDCEventDispatcherService
             )
     }
 

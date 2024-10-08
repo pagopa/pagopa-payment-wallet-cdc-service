@@ -2,6 +2,7 @@ package it.pagopa.wallet.cdc
 
 import it.pagopa.wallet.config.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.RetrySendPolicyConfig
+import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import java.time.Duration
 import java.time.Instant
 import org.bson.BsonDocument
@@ -59,9 +60,10 @@ class PaymentWalletsLogEventsStream(
                                 it.raw?.fullDocument?.get("_class"),
                                 it.raw?.fullDocument?.get("walletId")
                             )
-                            walletPaymentCDCEventDispatcherService.dispatchEvent(
-                                it.raw?.fullDocument
-                            )
+                            val document = it.raw?.fullDocument?.let { doc -> doc.toBsonDocument() }
+                            if (document != null) {
+                                walletPaymentCDCEventDispatcherService.dispatchEvent(document)
+                            }
                             Mono.just(it)
                         }
                         .retryWhen(
