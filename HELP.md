@@ -2,7 +2,7 @@
 The following was discovered as part of building this project:
 
 * The JVM level was changed from '23' to '21' as the Kotlin version does not support Java 23 yet.
-
+* 
 # Getting Started
 
 ### Reference Documentation
