@@ -2,7 +2,7 @@ package it.pagopa.wallet
 
 import it.pagopa.wallet.config.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.RetrySendPolicyConfig
-import it.pagopa.wallet.config.properties.ExpirationQueueConfig
+import it.pagopa.wallet.config.properties.ExpirationCdcQueueConfig
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
@@ -10,7 +10,7 @@ import reactor.core.publisher.Hooks
 
 @SpringBootApplication
 @EnableConfigurationProperties(
-    ExpirationQueueConfig::class,
+    ExpirationCdcQueueConfig::class,
     ChangeStreamOptionsConfig::class,
     RetrySendPolicyConfig::class
 )
