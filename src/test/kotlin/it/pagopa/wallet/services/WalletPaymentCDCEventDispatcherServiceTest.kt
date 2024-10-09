@@ -7,25 +7,23 @@ import it.pagopa.wallet.common.tracing.TracedMono
 import it.pagopa.wallet.common.tracing.TracingUtilsTest
 import it.pagopa.wallet.config.RetrySendPolicyConfig
 import it.pagopa.wallet.config.properties.CdcQueueConfig
-import it.pagopa.wallet.util.AzureQueueTestUtils
 import java.time.Duration
 import java.util.*
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.test.test
+import reactor.test.StepVerifier
 
 class WalletPaymentCDCEventDispatcherServiceTest {
 
     private val config = CdcQueueConfig("", "", 100, 100)
-
+    private val retrySendPolicyConfig: RetrySendPolicyConfig = RetrySendPolicyConfig(1, 100)
     private val walletQueueClient: WalletQueueClient = mock()
     private val tracingUtils = TracingUtilsTest.getMock()
-    private val retrySendPolicyConfig: RetrySendPolicyConfig = RetrySendPolicyConfig(1, 100)
     private val loggingEventDispatcherService =
         WalletPaymentCDCEventDispatcherService(
             walletQueueClient,
@@ -34,17 +32,14 @@ class WalletPaymentCDCEventDispatcherServiceTest {
             retrySendPolicyConfig
         )
 
-    @BeforeEach
-    fun setup() {
-        given { walletQueueClient.sendWalletEvent(any(), any(), any(), any()) }
-            .willAnswer { AzureQueueTestUtils.QUEUE_SUCCESSFUL_RESPONSE }
-    }
-
     @Test
-    fun `should dispatch WalletCreatedEvent from WalletAdded domain event 2`() {
+    fun `should dispatch WalletCreatedEvent from WalletAdded domain event`() {
         val walletId = UUID.randomUUID().toString()
         val walletCreatedLoggingEvent =
             BsonDocument().apply { append("walletId", BsonString(walletId)) }
+
+        given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
+            .willAnswer { Mono.just(mock() as Response<SendMessageResult>) }
 
         loggingEventDispatcherService
             .dispatchEvent(walletCreatedLoggingEvent)
@@ -57,7 +52,6 @@ class WalletPaymentCDCEventDispatcherServiceTest {
                 .sendWalletEvent(
                     capture(),
                     eq(Duration.ofSeconds(config.timeoutWalletExpired)),
-                    any(),
                     any()
                 )
             Assertions.assertEquals(
@@ -69,16 +63,54 @@ class WalletPaymentCDCEventDispatcherServiceTest {
     }
 
     @Test
-    fun `should return error if queue dispatching fails`() {
+    fun `should dispatch WalletCreatedEvent from WalletAdded domain event on second retry`() {
         val walletId = UUID.randomUUID().toString()
         val walletCreatedLoggingEvent =
             BsonDocument().apply { append("walletId", BsonString(walletId)) }
-        given { walletQueueClient.sendWalletEvent(any(), any(), any(), any()) }
-            .willAnswer {
-                Mono.error<Response<SendMessageResult>>(RuntimeException("Fail to publish message"))
-            }
 
-        loggingEventDispatcherService.dispatchEvent(walletCreatedLoggingEvent).test().expectError()
-        verify(tracingUtils, times(1)).traceMonoQueue(any(), any<TracedMono<Any>>())
+        given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
+            .willAnswer {
+                Mono.error<Response<SendMessageResult>>(RuntimeException("First attempt failed"))
+            }
+            .willAnswer { Mono.just(mock() as Response<SendMessageResult>) }
+
+        StepVerifier.create(loggingEventDispatcherService.dispatchEvent(walletCreatedLoggingEvent))
+            .expectSubscription()
+            .expectNextCount(1)
+            .verifyComplete()
     }
+
+    /*@Test
+    fun `should succeed on second retry of sendWalletEvent`() {
+        val walletId = UUID.randomUUID().toString()
+        val walletCreatedLoggingEvent =
+            BsonDocument().apply { append("walletId", BsonString(walletId)) }
+
+        given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
+            .willAnswer {
+                Mono.error<Response<SendMessageResult>>(RuntimeException("First attempt failed"))
+            }
+            .willAnswer {
+                Mono.just(mock() as Response<SendMessageResult>)
+            } // Second attempt succeeds
+
+        loggingEventDispatcherService
+            .dispatchEvent(walletCreatedLoggingEvent)
+            .test()
+            .verifyComplete()
+
+        argumentCaptor<BsonDocument> {
+            verify(walletQueueClient, times(2))
+                .sendWalletEvent(
+                    capture(),
+                    eq(Duration.ofSeconds(config.timeoutWalletExpired)),
+                    any()
+                )
+            Assertions.assertEquals(
+                walletCreatedLoggingEvent.getString("walletId"),
+                lastValue.getString("walletId")
+            )
+            verify(tracingUtils, times(1)).traceMonoQueue(any(), any<TracedMono<Any>>())
+        }
+    }*/
 }

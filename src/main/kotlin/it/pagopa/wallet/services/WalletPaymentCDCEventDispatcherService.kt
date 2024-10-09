@@ -1,7 +1,5 @@
 package it.pagopa.wallet.services
 
-import com.azure.core.http.rest.Response
-import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracingUtils
 import it.pagopa.wallet.config.RetrySendPolicyConfig
@@ -13,6 +11,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import reactor.util.retry.Retry
 
 @Component
 class WalletPaymentCDCEventDispatcherService(
@@ -29,20 +28,30 @@ class WalletPaymentCDCEventDispatcherService(
 
     fun dispatchEvent(event: BsonDocument?): Mono<BsonDocument> =
         if (event != null) {
-            onWalletEvent(event).map { event }
+            Mono.defer {
+                    tracingUtils.traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
+                        walletQueueClient.sendWalletEvent(
+                            event = event,
+                            delay = walletExpireTimeout,
+                            tracingInfo = tracingInfo,
+                        )
+                    }
+                }
+                .retryWhen(
+                    Retry.fixedDelay(
+                            retrySendPolicyConfig.maxAttempts,
+                            Duration.ofMillis(retrySendPolicyConfig.intervalInMs)
+                        )
+                        .filter { t -> t is Exception }
+                        .doBeforeRetry { signal ->
+                            logger.info(
+                                "Retrying writing event on CDC queue due to: ${signal.failure().message}"
+                            )
+                        }
+                )
+                .doOnError { e -> logger.error("Failed to send event after retries", e) }
+                .map { event }
         } else {
             Mono.empty()
         }
-
-    private fun onWalletEvent(event: BsonDocument): Mono<Response<SendMessageResult>> =
-        tracingUtils
-            .traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
-                walletQueueClient.sendWalletEvent(
-                    event = event,
-                    delay = walletExpireTimeout,
-                    tracingInfo = tracingInfo,
-                    retrySendPolicyConfig = retrySendPolicyConfig
-                )
-            }
-            .doOnError { logger.error("Failed to publish event") }
 }
