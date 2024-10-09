@@ -46,7 +46,7 @@ class WalletPaymentCDCEventDispatcherService(
                             )
                         }
                 )
-                .doOnError { e -> logger.error("Failed to send event after retries", e) }
+                .doOnError { e -> logger.error("Failed to send event after retries", e.message) }
                 .map { event }
         } else {
             Mono.empty()
