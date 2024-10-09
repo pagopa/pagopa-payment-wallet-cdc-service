@@ -20,6 +20,7 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.util.function.Tuple2
 import reactor.util.retry.Retry
 
 @Component
@@ -80,20 +81,24 @@ class PaymentWalletsLogEventsStream(
                 }
                 // Save resume token every n emitted elements
                 .index()
-                .flatMap {
-                    Mono.defer {
-                            if (it.t1.absoluteValue.plus(1).mod(saveInterval) == 0) {
-                                redisResumePolicyService.saveResumeTimestamp(Instant.now())
-                            }
-                            Mono.just(it.t2)
-                        }
-                        .onErrorResume {
-                            logger.error("Error saving resume policy: ", it)
-                            Mono.empty<ChangeStreamEvent<BsonDocument>>()
-                        }
-                }
-                .doOnError { logger.info("Error listening to change stream: ", it) }
+                .flatMap { saveToken(it) }
+                .doOnError { logger.error("Error listening to change stream: ", it) }
 
         return flux
+    }
+
+    private fun saveToken(
+        tuple: Tuple2<Long, ChangeStreamEvent<BsonDocument>>
+    ): Mono<ChangeStreamEvent<BsonDocument>> {
+        return Mono.defer {
+                if (tuple.t1.absoluteValue.plus(1).mod(saveInterval) == 0) {
+                    redisResumePolicyService.saveResumeTimestamp(Instant.now())
+                }
+                Mono.just(tuple.t2)
+            }
+            .onErrorResume {
+                logger.error("Error saving resume policy: ", it)
+                Mono.empty()
+            }
     }
 }
