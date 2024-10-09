@@ -51,7 +51,7 @@ class WalletPaymentCDCEventDispatcherServiceTest {
             verify(walletQueueClient, times(1))
                 .sendWalletEvent(
                     capture(),
-                    eq(Duration.ofSeconds(config.timeoutWalletExpired)),
+                    eq(Duration.ofSeconds(config.timeoutWalletCdc)),
                     any()
                 )
             Assertions.assertEquals(

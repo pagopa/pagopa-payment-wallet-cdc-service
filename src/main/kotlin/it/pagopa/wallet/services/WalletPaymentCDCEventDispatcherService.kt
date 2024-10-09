@@ -23,7 +23,7 @@ class WalletPaymentCDCEventDispatcherService(
     private val WALLET_CDC_EVENT_HANDLER_SPAN_NAME = "cdcWalletEvent"
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-    private val walletCdcTimeout = Duration.ofSeconds(cdcQueueConfig.timeoutWalletExpired)
+    private val walletCdcTimeout = Duration.ofSeconds(cdcQueueConfig.timeoutWalletCdc)
 
     fun dispatchEvent(event: BsonDocument?): Mono<BsonDocument> =
         if (event != null) {
