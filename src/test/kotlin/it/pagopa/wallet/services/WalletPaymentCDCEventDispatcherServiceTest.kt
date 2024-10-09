@@ -79,38 +79,4 @@ class WalletPaymentCDCEventDispatcherServiceTest {
             .expectNextCount(1)
             .verifyComplete()
     }
-
-    /*@Test
-    fun `should succeed on second retry of sendWalletEvent`() {
-        val walletId = UUID.randomUUID().toString()
-        val walletCreatedLoggingEvent =
-            BsonDocument().apply { append("walletId", BsonString(walletId)) }
-
-        given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
-            .willAnswer {
-                Mono.error<Response<SendMessageResult>>(RuntimeException("First attempt failed"))
-            }
-            .willAnswer {
-                Mono.just(mock() as Response<SendMessageResult>)
-            } // Second attempt succeeds
-
-        loggingEventDispatcherService
-            .dispatchEvent(walletCreatedLoggingEvent)
-            .test()
-            .verifyComplete()
-
-        argumentCaptor<BsonDocument> {
-            verify(walletQueueClient, times(2))
-                .sendWalletEvent(
-                    capture(),
-                    eq(Duration.ofSeconds(config.timeoutWalletExpired)),
-                    any()
-                )
-            Assertions.assertEquals(
-                walletCreatedLoggingEvent.getString("walletId"),
-                lastValue.getString("walletId")
-            )
-            verify(tracingUtils, times(1)).traceMonoQueue(any(), any<TracedMono<Any>>())
-        }
-    }*/
 }
