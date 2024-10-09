@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
-import org.springframework.data.mongodb.core.ChangeStreamEvent
 import org.springframework.data.mongodb.core.ChangeStreamOptions
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
@@ -30,8 +29,8 @@ class PaymentWalletsLogEventsStream(
         this.streamPaymentWalletsLogEvents().subscribe()
     }
 
-    fun streamPaymentWalletsLogEvents(): Flux<ChangeStreamEvent<BsonDocument>> {
-        val flux: Flux<ChangeStreamEvent<BsonDocument>> =
+    fun streamPaymentWalletsLogEvents(): Flux<BsonDocument> {
+        val flux: Flux<BsonDocument> =
             reactiveMongoTemplate
                 .changeStream(
                     changeStreamOptionsConfig.collection,
@@ -50,20 +49,16 @@ class PaymentWalletsLogEventsStream(
                     BsonDocument::class.java
                 )
                 .flatMap {
-                    Mono.defer {
-                            logger.info(
-                                "Handling new change stream event of type {} for wallet with id {}",
-                                it.raw?.fullDocument?.get("_class"),
-                                it.raw?.fullDocument?.get("walletId")
-                            )
-                            walletPaymentCDCEventDispatcherService.dispatchEvent(
-                                it.raw?.fullDocument?.toBsonDocument()
-                            )
-                            Mono.just(it)
-                        }
+                    logger.info(
+                        "Handling new change stream event of type {} for wallet with id {}",
+                        it.raw?.fullDocument?.get("_class"),
+                        it.raw?.fullDocument?.get("walletId")
+                    )
+                    walletPaymentCDCEventDispatcherService
+                        .dispatchEvent(it.raw?.fullDocument?.toBsonDocument())
                         .onErrorResume {
                             logger.error("Error during event handling : ", it)
-                            Mono.empty<ChangeStreamEvent<BsonDocument>>()
+                            Mono.empty<BsonDocument>()
                         }
                 }
 
