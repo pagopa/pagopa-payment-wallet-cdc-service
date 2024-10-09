@@ -36,7 +36,9 @@ class WalletPaymentCDCEventDispatcherServiceTest {
     fun `should dispatch WalletCreatedEvent from WalletAdded domain event`() {
         val walletId = UUID.randomUUID().toString()
         val walletCreatedLoggingEvent =
-            BsonDocument().apply { append("walletId", BsonString(walletId)) }
+            BsonDocument("_class", BsonString("class")).apply {
+                append("walletId", BsonString(walletId))
+            }
 
         given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
             .willAnswer { Mono.just(mock() as Response<SendMessageResult>) }
@@ -66,7 +68,9 @@ class WalletPaymentCDCEventDispatcherServiceTest {
     fun `should dispatch WalletCreatedEvent from WalletAdded domain event on second retry`() {
         val walletId = UUID.randomUUID().toString()
         val walletCreatedLoggingEvent =
-            BsonDocument().apply { append("walletId", BsonString(walletId)) }
+            BsonDocument("_class", BsonString("class")).apply {
+                append("walletId", BsonString(walletId))
+            }
 
         given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
             .willAnswer {

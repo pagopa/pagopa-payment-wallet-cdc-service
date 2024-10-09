@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.convert.MongoConverter
 import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
 @ExtendWith(MockitoExtension::class)
@@ -40,7 +41,8 @@ class PaymentWalletsLogEventsStreamTest {
 
     @Test
     fun `change stream produces new Document`() {
-        val expectedDocument =
+        val expectedDocument = BsonDocument()
+        val expectedChangeStreamDocument =
             ChangeStreamEvent(
                 ChangeStreamDocument(
                     null,
@@ -61,7 +63,7 @@ class PaymentWalletsLogEventsStreamTest {
                 BsonDocument::class.java,
                 mongoConverter
             )
-        val bsonDocumentFlux = Flux.just(expectedDocument)
+        val bsonDocumentFlux = Flux.just(expectedChangeStreamDocument)
 
         given {
                 reactiveMongoTemplate.changeStream(
@@ -71,6 +73,9 @@ class PaymentWalletsLogEventsStreamTest {
                 )
             }
             .willReturn(bsonDocumentFlux)
+
+        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
+            .willReturn(Mono.just(expectedDocument))
 
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .expectNext(expectedDocument)
@@ -79,8 +84,7 @@ class PaymentWalletsLogEventsStreamTest {
 
     @Test
     fun `change stream throws error and continues to listen`() {
-        val expectedMockDocument: ChangeStreamEvent<BsonDocument> = mock()
-        val expectedDocument =
+        val expectedChangeStreamDocument =
             ChangeStreamEvent(
                 ChangeStreamDocument(
                     null,
@@ -101,7 +105,12 @@ class PaymentWalletsLogEventsStreamTest {
                 BsonDocument::class.java,
                 mongoConverter
             )
-        val bsonDocumentFlux = Flux.just(expectedDocument, expectedMockDocument, expectedDocument)
+        val bsonDocumentFlux =
+            Flux.just(
+                expectedChangeStreamDocument,
+                expectedChangeStreamDocument,
+                expectedChangeStreamDocument
+            )
 
         given {
                 reactiveMongoTemplate.changeStream(
@@ -112,12 +121,12 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
-        given { expectedMockDocument.raw }.willThrow(IllegalArgumentException())
+        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
+            .willThrow(IllegalArgumentException::class)
 
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
-            .recordWith { ArrayList() }
-            .thenConsumeWhile { it.raw?.fullDocument != null }
-            .expectRecordedMatches { it.size == 2 }
             .verifyComplete()
+
+        verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
     }
 }
