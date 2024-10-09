@@ -49,13 +49,11 @@ class PaymentWalletsLogEventsStream(
                     BsonDocument::class.java
                 )
                 .flatMap {
-                    logger.info(
-                        "Handling new change stream event of type {} for wallet with id {}",
-                        it.raw?.fullDocument?.get("_class"),
-                        it.raw?.fullDocument?.get("walletId")
-                    )
-                    walletPaymentCDCEventDispatcherService
-                        .dispatchEvent(it.raw?.fullDocument?.toBsonDocument())
+                    Mono.defer {
+                            walletPaymentCDCEventDispatcherService.dispatchEvent(
+                                it.raw?.fullDocument?.toBsonDocument()
+                            )
+                        }
                         .onErrorResume {
                             logger.error("Error during event handling : ", it)
                             Mono.empty<BsonDocument>()
