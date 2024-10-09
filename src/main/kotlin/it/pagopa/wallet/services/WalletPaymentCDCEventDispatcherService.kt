@@ -8,7 +8,6 @@ import java.time.Duration
 import org.bson.BsonDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
@@ -18,13 +17,13 @@ class WalletPaymentCDCEventDispatcherService(
     private val walletQueueClient: WalletQueueClient,
     private val tracingUtils: TracingUtils,
     private val cdcQueueConfig: CdcQueueConfig,
-    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig
+    private val retrySendPolicyConfig: RetrySendPolicyConfig
 ) {
 
     private val WALLET_CDC_EVENT_HANDLER_SPAN_NAME = "cdcWalletEvent"
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-    private val walletExpireTimeout = Duration.ofSeconds(cdcQueueConfig.timeoutWalletExpired)
+    private val walletCdcTimeout = Duration.ofSeconds(cdcQueueConfig.timeoutWalletExpired)
 
     fun dispatchEvent(event: BsonDocument?): Mono<BsonDocument> =
         if (event != null) {
@@ -32,7 +31,7 @@ class WalletPaymentCDCEventDispatcherService(
                     tracingUtils.traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
                         walletQueueClient.sendWalletEvent(
                             event = event,
-                            delay = walletExpireTimeout,
+                            delay = walletCdcTimeout,
                             tracingInfo = tracingInfo,
                         )
                     }
