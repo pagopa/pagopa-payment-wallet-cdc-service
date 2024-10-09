@@ -36,7 +36,6 @@ class PaymentWalletsLogEventsStreamTest {
             PaymentWalletsLogEventsStream(
                 reactiveMongoTemplate,
                 changeStreamOptionsConfig,
-                retrySendPolicyConfig,
                 walletPaymentCDCEventDispatcherService
             )
     }

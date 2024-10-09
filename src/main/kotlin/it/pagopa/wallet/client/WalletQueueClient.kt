@@ -8,17 +8,19 @@ import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.cdc.PaymentWalletsLogEventsStream
 import it.pagopa.wallet.common.QueueEvent
 import it.pagopa.wallet.common.tracing.QueueTracingInfo
+import it.pagopa.wallet.config.RetrySendPolicyConfig
 import java.time.Duration
-import java.time.temporal.ChronoUnit
 import org.bson.BsonDocument
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
 
 class WalletQueueClient(
     private val cdcQueueClient: QueueAsyncClient,
     private val jsonSerializer: JsonSerializer,
-    private val ttl: Duration
+    private val ttl: Duration,
+    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig,
 ) {
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
 
@@ -31,9 +33,16 @@ class WalletQueueClient(
         return BinaryData.fromObjectAsync(queueEvent, jsonSerializer)
             .flatMap { cdcQueueClient.sendMessageWithResponse(it, delay, ttl) }
             .retryWhen(
-                Retry.backoff(3, Duration.of(1, ChronoUnit.SECONDS)).doBeforeRetry { signal ->
-                    logger.info("Retrying due to: ${signal.failure().message}")
-                }
+                Retry.fixedDelay(
+                        retrySendPolicyConfig.maxAttempts,
+                        Duration.ofMillis(retrySendPolicyConfig.intervalInMs)
+                    )
+                    .filter { t -> t is Exception }
+                    .doBeforeRetry { signal ->
+                        logger.info(
+                            "Retrying writing event on CDC queue due to: ${signal.failure().message}"
+                        )
+                    }
             )
     }
 }

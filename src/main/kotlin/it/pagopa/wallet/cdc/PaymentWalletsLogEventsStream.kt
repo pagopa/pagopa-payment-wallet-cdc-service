@@ -1,9 +1,7 @@
 package it.pagopa.wallet.cdc
 
 import it.pagopa.wallet.config.ChangeStreamOptionsConfig
-import it.pagopa.wallet.config.RetrySendPolicyConfig
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
-import java.time.Duration
 import java.time.Instant
 import org.bson.BsonDocument
 import org.slf4j.LoggerFactory
@@ -18,13 +16,11 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.util.retry.Retry
 
 @Component
 class PaymentWalletsLogEventsStream(
     @Autowired private val reactiveMongoTemplate: ReactiveMongoTemplate,
     @Autowired private val changeStreamOptionsConfig: ChangeStreamOptionsConfig,
-    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig,
     @Autowired
     private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService
 ) : ApplicationListener<ApplicationReadyEvent> {
@@ -70,13 +66,6 @@ class PaymentWalletsLogEventsStream(
                             Mono.error(throwable)
                         }
                 }
-                .retryWhen(
-                    Retry.fixedDelay(
-                            retrySendPolicyConfig.maxAttempts,
-                            Duration.ofMillis(retrySendPolicyConfig.intervalInMs)
-                        )
-                        .filter { t -> t is Exception }
-                )
                 .onErrorResume {
                     logger.error("Error during event handling: ", it)
                     Mono.empty<ChangeStreamEvent<BsonDocument>>()

@@ -6,6 +6,7 @@ import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.QueueEvent
 import it.pagopa.wallet.common.tracing.QueueTracingInfo
+import it.pagopa.wallet.config.RetrySendPolicyConfig
 import java.time.Duration
 import org.bson.BsonDocument
 import org.junit.jupiter.api.Test
@@ -27,10 +28,12 @@ class WalletQueueClientTest {
     private val delay = Duration.ofSeconds(10)
     private val queueEvent = QueueEvent(event, tracingInfo)
     private val binaryData = BinaryData.fromObject(queueEvent)
+    private val retrySendPolicyConfig: RetrySendPolicyConfig = RetrySendPolicyConfig(1, 100)
 
     private val jsonSerializer: JsonSerializer = mock()
     private var cdcQueueClient: QueueAsyncClient = mock()
-    private val walletQueueClient = WalletQueueClient(cdcQueueClient, jsonSerializer, ttl)
+    private val walletQueueClient =
+        WalletQueueClient(cdcQueueClient, jsonSerializer, ttl, retrySendPolicyConfig)
 
     @Test
     fun `sendWalletEvent should succeed without retry`() {
