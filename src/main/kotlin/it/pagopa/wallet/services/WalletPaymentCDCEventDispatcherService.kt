@@ -24,9 +24,9 @@ class WalletPaymentCDCEventDispatcherService(
 
     private val walletExpireTimeout = Duration.ofSeconds(cdcQueueConfig.timeoutWalletExpired)
 
-    fun dispatchEvent(event: BsonDocument?): Mono<BsonDocument> =
+    fun dispatchEvent(event: BsonDocument?): Mono<Response<SendMessageResult>> =
         if (event != null) {
-            onWalletEvent(event).map { event }
+            onWalletEvent(event)
         } else {
             Mono.empty()
         }
