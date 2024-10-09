@@ -6,12 +6,8 @@ import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.QueueEvent
 import it.pagopa.wallet.common.tracing.QueueTracingInfo
-import it.pagopa.wallet.util.AzureQueueTestUtils
 import java.time.Duration
 import org.bson.BsonDocument
-import org.bson.BsonString
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.*
@@ -20,7 +16,6 @@ import org.mockito.kotlin.*
 import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import kotlin.random.Random
 
 @ExtendWith(MockitoExtension::class)
 @TestPropertySource(locations = ["classpath:application-test.properties"])
@@ -57,8 +52,12 @@ class WalletQueueClientTest {
 
         // First attempt fails
         given { cdcQueueClient.sendMessageWithResponse(any<BinaryData>(), eq(delay), eq(ttl)) }
-            .willAnswer { Mono.error<Response<SendMessageResult>>(RuntimeException("First attempt failed")) }
-            .willAnswer { Mono.just(mock() as Response<SendMessageResult>) } // Second attempt succeeds
+            .willAnswer {
+                Mono.error<Response<SendMessageResult>>(RuntimeException("First attempt failed"))
+            }
+            .willAnswer {
+                Mono.just(mock() as Response<SendMessageResult>)
+            } // Second attempt succeeds
 
         StepVerifier.create(walletQueueClient.sendWalletEvent(event, delay, tracingInfo))
             .expectSubscription()
