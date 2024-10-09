@@ -53,29 +53,33 @@ class PaymentWalletsLogEventsStream(
                         .build(),
                     BsonDocument::class.java
                 )
-                .flatMap {
+                .flatMap { event ->
                     Mono.defer {
                             logger.info(
                                 "Handling new change stream event of type {} for wallet with id {}",
-                                it.raw?.fullDocument?.get("_class"),
-                                it.raw?.fullDocument?.get("walletId")
+                                event.raw?.fullDocument?.get("_class"),
+                                event.raw?.fullDocument?.get("walletId")
                             )
                             walletPaymentCDCEventDispatcherService.dispatchEvent(
-                                it.raw?.fullDocument?.toBsonDocument()
+                                event.raw?.fullDocument?.toBsonDocument()
                             )
-                            Mono.just(it)
                         }
-                        .retryWhen(
-                            Retry.fixedDelay(
-                                    retrySendPolicyConfig.maxAttempts,
-                                    Duration.ofMillis(retrySendPolicyConfig.intervalInMs)
-                                )
-                                .filter { t -> t is Exception }
+                        .thenReturn(event)
+                        .onErrorResume { throwable ->
+                            logger.error("Error during event handling: ", throwable)
+                            Mono.error(throwable)
+                        }
+                }
+                .retryWhen(
+                    Retry.fixedDelay(
+                            retrySendPolicyConfig.maxAttempts,
+                            Duration.ofMillis(retrySendPolicyConfig.intervalInMs)
                         )
-                        .onErrorResume {
-                            logger.error("Error during event handling : ", it)
-                            Mono.empty<ChangeStreamEvent<BsonDocument>>()
-                        }
+                        .filter { t -> t is Exception }
+                )
+                .onErrorResume {
+                    logger.error("Error during event handling: ", it)
+                    Mono.empty<ChangeStreamEvent<BsonDocument>>()
                 }
 
         return flux
