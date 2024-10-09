@@ -24,7 +24,7 @@ class AzureStorageConfiguration {
     @Bean
     fun cdcQueueClient(
         cdcQueueConfig: CdcQueueConfig,
-        jsonSerializerProvider: JsonSerializerProvider
+        jsonSerializerProvider: JsonSerializerProvider,
     ): WalletQueueClient {
         val serializer = jsonSerializerProvider.createInstance()
         val queue =

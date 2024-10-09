@@ -32,8 +32,7 @@ class WalletQueueClientTest {
 
     private val jsonSerializer: JsonSerializer = mock()
     private var cdcQueueClient: QueueAsyncClient = mock()
-    private val walletQueueClient =
-        WalletQueueClient(cdcQueueClient, jsonSerializer, ttl, retrySendPolicyConfig)
+    private val walletQueueClient = WalletQueueClient(cdcQueueClient, jsonSerializer, ttl)
 
     @Test
     fun `sendWalletEvent should succeed without retry`() {
@@ -42,7 +41,9 @@ class WalletQueueClientTest {
         given { cdcQueueClient.sendMessageWithResponse(any<BinaryData>(), eq(delay), eq(ttl)) }
             .willAnswer { Mono.just(mock() as Response<SendMessageResult>) }
 
-        StepVerifier.create(walletQueueClient.sendWalletEvent(event, delay, tracingInfo))
+        StepVerifier.create(
+                walletQueueClient.sendWalletEvent(event, delay, tracingInfo, retrySendPolicyConfig)
+            )
             .expectSubscription()
             .expectNextCount(1)
             .verifyComplete()
@@ -62,7 +63,9 @@ class WalletQueueClientTest {
                 Mono.just(mock() as Response<SendMessageResult>)
             } // Second attempt succeeds
 
-        StepVerifier.create(walletQueueClient.sendWalletEvent(event, delay, tracingInfo))
+        StepVerifier.create(
+                walletQueueClient.sendWalletEvent(event, delay, tracingInfo, retrySendPolicyConfig)
+            )
             .expectSubscription()
             .expectNextCount(1)
             .verifyComplete()

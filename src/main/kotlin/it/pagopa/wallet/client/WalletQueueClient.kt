@@ -12,22 +12,21 @@ import it.pagopa.wallet.config.RetrySendPolicyConfig
 import java.time.Duration
 import org.bson.BsonDocument
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
 
 class WalletQueueClient(
     private val cdcQueueClient: QueueAsyncClient,
     private val jsonSerializer: JsonSerializer,
-    private val ttl: Duration,
-    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig,
+    private val ttl: Duration
 ) {
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
 
     fun sendWalletEvent(
         event: BsonDocument,
         delay: Duration,
-        tracingInfo: QueueTracingInfo
+        tracingInfo: QueueTracingInfo,
+        retrySendPolicyConfig: RetrySendPolicyConfig
     ): Mono<Response<SendMessageResult>> {
         val queueEvent = QueueEvent(event, tracingInfo)
         return BinaryData.fromObjectAsync(queueEvent, jsonSerializer)

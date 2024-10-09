@@ -5,6 +5,7 @@ import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracedMono
 import it.pagopa.wallet.common.tracing.TracingUtilsTest
+import it.pagopa.wallet.config.RetrySendPolicyConfig
 import it.pagopa.wallet.config.properties.CdcQueueConfig
 import it.pagopa.wallet.util.AzureQueueTestUtils
 import java.time.Duration
@@ -24,12 +25,18 @@ class WalletPaymentCDCEventDispatcherServiceTest {
 
     private val walletQueueClient: WalletQueueClient = mock()
     private val tracingUtils = TracingUtilsTest.getMock()
+    private val retrySendPolicyConfig: RetrySendPolicyConfig = RetrySendPolicyConfig(1, 100)
     private val loggingEventDispatcherService =
-        WalletPaymentCDCEventDispatcherService(walletQueueClient, tracingUtils, config)
+        WalletPaymentCDCEventDispatcherService(
+            walletQueueClient,
+            tracingUtils,
+            config,
+            retrySendPolicyConfig
+        )
 
     @BeforeEach
     fun setup() {
-        given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
+        given { walletQueueClient.sendWalletEvent(any(), any(), any(), any()) }
             .willAnswer { AzureQueueTestUtils.QUEUE_SUCCESSFUL_RESPONSE }
     }
 
@@ -50,6 +57,7 @@ class WalletPaymentCDCEventDispatcherServiceTest {
                 .sendWalletEvent(
                     capture(),
                     eq(Duration.ofSeconds(config.timeoutWalletExpired)),
+                    any(),
                     any()
                 )
             Assertions.assertEquals(
@@ -65,7 +73,7 @@ class WalletPaymentCDCEventDispatcherServiceTest {
         val walletId = UUID.randomUUID().toString()
         val walletCreatedLoggingEvent =
             BsonDocument().apply { append("walletId", BsonString(walletId)) }
-        given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
+        given { walletQueueClient.sendWalletEvent(any(), any(), any(), any()) }
             .willAnswer {
                 Mono.error<Response<SendMessageResult>>(RuntimeException("Fail to publish message"))
             }

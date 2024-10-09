@@ -4,11 +4,13 @@ import com.azure.core.http.rest.Response
 import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracingUtils
+import it.pagopa.wallet.config.RetrySendPolicyConfig
 import it.pagopa.wallet.config.properties.CdcQueueConfig
 import java.time.Duration
 import org.bson.BsonDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
@@ -17,6 +19,7 @@ class WalletPaymentCDCEventDispatcherService(
     private val walletQueueClient: WalletQueueClient,
     private val tracingUtils: TracingUtils,
     private val cdcQueueConfig: CdcQueueConfig,
+    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig
 ) {
 
     private val WALLET_CDC_EVENT_HANDLER_SPAN_NAME = "cdcWalletEvent"
@@ -24,9 +27,9 @@ class WalletPaymentCDCEventDispatcherService(
 
     private val walletExpireTimeout = Duration.ofSeconds(cdcQueueConfig.timeoutWalletExpired)
 
-    fun dispatchEvent(event: BsonDocument?): Mono<Response<SendMessageResult>> =
+    fun dispatchEvent(event: BsonDocument?): Mono<BsonDocument> =
         if (event != null) {
-            onWalletEvent(event)
+            onWalletEvent(event).map { event }
         } else {
             Mono.empty()
         }
@@ -37,7 +40,8 @@ class WalletPaymentCDCEventDispatcherService(
                 walletQueueClient.sendWalletEvent(
                     event = event,
                     delay = walletExpireTimeout,
-                    tracingInfo = tracingInfo
+                    tracingInfo = tracingInfo,
+                    retrySendPolicyConfig = retrySendPolicyConfig
                 )
             }
             .doOnError { logger.error("Failed to publish event") }

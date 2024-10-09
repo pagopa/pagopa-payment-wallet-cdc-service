@@ -49,26 +49,22 @@ class PaymentWalletsLogEventsStream(
                         .build(),
                     BsonDocument::class.java
                 )
-                .flatMap { event ->
+                .flatMap {
                     Mono.defer {
                             logger.info(
                                 "Handling new change stream event of type {} for wallet with id {}",
-                                event.raw?.fullDocument?.get("_class"),
-                                event.raw?.fullDocument?.get("walletId")
+                                it.raw?.fullDocument?.get("_class"),
+                                it.raw?.fullDocument?.get("walletId")
                             )
                             walletPaymentCDCEventDispatcherService.dispatchEvent(
-                                event.raw?.fullDocument?.toBsonDocument()
+                                it.raw?.fullDocument?.toBsonDocument()
                             )
+                            Mono.just(it)
                         }
-                        .thenReturn(event)
-                        .onErrorResume { throwable ->
-                            logger.error("Error during event handling: ", throwable)
-                            Mono.error(throwable)
+                        .onErrorResume {
+                            logger.error("Error during event handling : ", it)
+                            Mono.empty<ChangeStreamEvent<BsonDocument>>()
                         }
-                }
-                .onErrorResume {
-                    logger.error("Error during event handling: ", it)
-                    Mono.empty<ChangeStreamEvent<BsonDocument>>()
                 }
 
         return flux
