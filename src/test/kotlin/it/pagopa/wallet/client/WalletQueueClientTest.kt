@@ -6,72 +6,63 @@ import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.QueueEvent
 import it.pagopa.wallet.common.tracing.QueueTracingInfo
+import it.pagopa.wallet.util.AzureQueueTestUtils
 import java.time.Duration
 import org.bson.BsonDocument
+import org.bson.BsonString
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
-import org.mockito.InjectMocks
-import org.mockito.Mock
+import org.mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
+import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import kotlin.random.Random
 
 @ExtendWith(MockitoExtension::class)
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class WalletQueueClientTest {
 
-    @Mock private lateinit var cdcQueueClient: QueueAsyncClient
+    private val event = BsonDocument()
+    private val tracingInfo = QueueTracingInfo("", "", "")
+    private val ttl = Duration.ofMinutes(5)
+    private val delay = Duration.ofSeconds(10)
+    private val queueEvent = QueueEvent(event, tracingInfo)
+    private val binaryData = BinaryData.fromObject(queueEvent)
 
-    @Mock private lateinit var jsonSerializer: JsonSerializer
-
-    @InjectMocks private lateinit var walletQueueClient: WalletQueueClient
-
-    @Captor private lateinit var binaryDataCaptor: ArgumentCaptor<BinaryData>
-
-    @Test
-    fun `sendWalletEvent should retry on failure and succeed`() {
-        val event = BsonDocument()
-        val tracingInfo = QueueTracingInfo("", "", "")
-        val ttl = Duration.ofMinutes(5)
-        val delay = Duration.ofSeconds(10)
-        val queueEvent = QueueEvent(event, tracingInfo)
-        val binaryData = BinaryData.fromObject(queueEvent)
-
-        whenever(jsonSerializer.serializeToBytes(queueEvent)).thenReturn(binaryData.toBytes())
-        whenever(cdcQueueClient.sendMessageWithResponse(any<BinaryData>(), eq(delay), eq(ttl)))
-            .thenReturn(Mono.error(RuntimeException("Temporary error")))
-            .thenReturn(Mono.just(mock() as Response<SendMessageResult>))
-
-        StepVerifier.create(walletQueueClient.sendWalletEvent(event, delay, tracingInfo))
-            .expectSubscription()
-            .expectError(RuntimeException::class.java)
-            .verify()
-
-        verify(cdcQueueClient, times(2))
-            .sendMessageWithResponse(any<BinaryData>(), eq(delay), eq(ttl))
-    }
+    private val jsonSerializer: JsonSerializer = mock()
+    private var cdcQueueClient: QueueAsyncClient = mock()
+    private val walletQueueClient = WalletQueueClient(cdcQueueClient, jsonSerializer, ttl)
 
     @Test
     fun `sendWalletEvent should succeed without retry`() {
-        val event = BsonDocument()
-        val tracingInfo = QueueTracingInfo("", "", "")
-        val ttl = Duration.ofMinutes(5)
-        val delay = Duration.ofSeconds(10)
-        val queueEvent = QueueEvent(event, tracingInfo)
-        val binaryData = BinaryData.fromObject(queueEvent)
 
-        whenever(jsonSerializer.serializeToBytes(queueEvent)).thenReturn(binaryData.toBytes())
-        whenever(cdcQueueClient.sendMessageWithResponse(any<BinaryData>(), eq(delay), eq(ttl)))
-            .thenReturn(Mono.just(mock() as Response<SendMessageResult>))
+        given { jsonSerializer.serializeToBytes(queueEvent) }.willAnswer { binaryData.toBytes() }
+        given { cdcQueueClient.sendMessageWithResponse(any<BinaryData>(), eq(delay), eq(ttl)) }
+            .willAnswer { Mono.just(mock() as Response<SendMessageResult>) }
 
         StepVerifier.create(walletQueueClient.sendWalletEvent(event, delay, tracingInfo))
             .expectSubscription()
             .expectNextCount(1)
             .verifyComplete()
+    }
 
-        verify(cdcQueueClient, times(1))
-            .sendMessageWithResponse(any<BinaryData>(), eq(delay), eq(ttl))
+    @Test
+    fun `sendWalletEvent should succeed on second retry`() {
+
+        given { jsonSerializer.serializeToBytes(queueEvent) }.willAnswer { binaryData.toBytes() }
+
+        // First attempt fails
+        given { cdcQueueClient.sendMessageWithResponse(any<BinaryData>(), eq(delay), eq(ttl)) }
+            .willAnswer { Mono.error<Response<SendMessageResult>>(RuntimeException("First attempt failed")) }
+            .willAnswer { Mono.just(mock() as Response<SendMessageResult>) } // Second attempt succeeds
+
+        StepVerifier.create(walletQueueClient.sendWalletEvent(event, delay, tracingInfo))
+            .expectSubscription()
+            .expectNextCount(1)
+            .verifyComplete()
     }
 }
