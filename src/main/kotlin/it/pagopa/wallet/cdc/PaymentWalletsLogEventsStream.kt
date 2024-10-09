@@ -9,6 +9,7 @@ import kotlin.math.absoluteValue
 import org.bson.BsonDocument
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.data.mongodb.core.ChangeStreamEvent
@@ -26,7 +27,8 @@ class PaymentWalletsLogEventsStream(
     @Autowired private val reactiveMongoTemplate: ReactiveMongoTemplate,
     @Autowired private val changeStreamOptionsConfig: ChangeStreamOptionsConfig,
     @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig,
-    @Autowired private val redisResumePolicyService: ResumePolicyService
+    @Autowired private val redisResumePolicyService: ResumePolicyService,
+    @Value("\${cdc.resume.saveInterval}") private val saveInterval: Int
 ) : ApplicationListener<ApplicationReadyEvent> {
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
 
@@ -80,7 +82,7 @@ class PaymentWalletsLogEventsStream(
                 .index()
                 .flatMap {
                     Mono.defer {
-                            if (it.t1.absoluteValue.plus(1).mod(1) == 0) {
+                            if (it.t1.absoluteValue.plus(1).mod(saveInterval) == 0) {
                                 redisResumePolicyService.saveResumeTimestamp(Instant.now())
                             }
                             Mono.just(it.t2)

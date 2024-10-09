@@ -47,6 +47,7 @@ dependencies {
   testImplementation("io.projectreactor:reactor-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+  testImplementation("io.netty:netty-resolver-dns-native-macos:4.1.82.Final:osx-aarch_64")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

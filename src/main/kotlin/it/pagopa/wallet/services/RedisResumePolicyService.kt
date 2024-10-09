@@ -31,7 +31,7 @@ class RedisResumePolicyService(
     }
 
     override fun saveResumeTimestamp(timestamp: Instant) {
-        logger.info("Saving instant: {}", timestamp.toString())
+        logger.debug("Saving instant: {}", timestamp.toString())
         redisTemplate.save(
             redisResumePolicyConfig.keyspace,
             redisResumePolicyConfig.target,
