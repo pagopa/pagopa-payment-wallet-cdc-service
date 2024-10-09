@@ -23,15 +23,13 @@ class WalletPaymentCDCEventDispatcherService(
     private val WALLET_CDC_EVENT_HANDLER_SPAN_NAME = "cdcWalletEvent"
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-    private val walletCdcTimeout = Duration.ofSeconds(cdcQueueConfig.timeoutWalletCdc)
-
     fun dispatchEvent(event: BsonDocument?): Mono<BsonDocument> =
         if (event != null) {
             Mono.defer {
                     tracingUtils.traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
                         walletQueueClient.sendWalletEvent(
                             event = event,
-                            delay = walletCdcTimeout,
+                            delay = Duration.ofSeconds(cdcQueueConfig.visibilityTimeoutWalletCdc),
                             tracingInfo = tracingInfo,
                         )
                     }

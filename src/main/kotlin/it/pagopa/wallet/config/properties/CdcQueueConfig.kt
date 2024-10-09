@@ -7,5 +7,5 @@ data class CdcQueueConfig(
     val storageConnectionString: String,
     val storageQueueName: String,
     val ttlSeconds: Long,
-    val timeoutWalletCdc: Long
+    val visibilityTimeoutWalletCdc: Long
 )
