@@ -26,6 +26,11 @@ class WalletPaymentCDCEventDispatcherService(
     fun dispatchEvent(event: BsonDocument?): Mono<BsonDocument> =
         if (event != null) {
             Mono.defer {
+                    logger.info(
+                        "Handling new change stream event of type {} for wallet with id {}",
+                        event.getString("_class").value,
+                        event.getString("walletId").value
+                    )
                     tracingUtils.traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
                         walletQueueClient.sendWalletEvent(
                             event = event,
@@ -41,12 +46,12 @@ class WalletPaymentCDCEventDispatcherService(
                         )
                         .filter { t -> t is Exception }
                         .doBeforeRetry { signal ->
-                            logger.info(
+                            logger.warn(
                                 "Retrying writing event on CDC queue due to: ${signal.failure().message}"
                             )
                         }
                 )
-                .doOnError { e -> logger.error("Failed to send event after retries", e.message) }
+                .doOnError { e -> logger.error("Failed to send event after retries {}", e.message) }
                 .map { event }
         } else {
             Mono.empty()
