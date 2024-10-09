@@ -16,11 +16,10 @@ class WalletQueueClient(
     private val jsonSerializer: JsonSerializer,
     private val ttl: Duration
 ) {
-
     fun sendWalletEvent(
         event: BsonDocument,
         delay: Duration,
-        tracingInfo: QueueTracingInfo
+        tracingInfo: QueueTracingInfo,
     ): Mono<Response<SendMessageResult>> {
         val queueEvent = QueueEvent(event, tracingInfo)
         return BinaryData.fromObjectAsync(queueEvent, jsonSerializer).flatMap {
