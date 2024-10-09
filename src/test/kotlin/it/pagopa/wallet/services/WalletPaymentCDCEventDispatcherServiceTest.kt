@@ -49,7 +49,11 @@ class WalletPaymentCDCEventDispatcherServiceTest {
 
         argumentCaptor<BsonDocument> {
             verify(walletQueueClient, times(1))
-                .sendWalletEvent(capture(), eq(Duration.ofSeconds(config.timeoutWalletCdc)), any())
+                .sendWalletEvent(
+                    capture(),
+                    eq(Duration.ofSeconds(config.visibilityTimeoutWalletCdc)),
+                    any()
+                )
             Assertions.assertEquals(
                 walletCreatedLoggingEvent.getString("walletId"),
                 lastValue.getString("walletId")
