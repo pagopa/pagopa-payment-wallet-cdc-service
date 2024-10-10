@@ -2,8 +2,8 @@ package it.pagopa.wallet.services
 
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracingUtils
-import it.pagopa.wallet.config.properties.RetrySendPolicyConfig
 import it.pagopa.wallet.config.properties.CdcQueueConfig
+import it.pagopa.wallet.config.properties.RetrySendPolicyConfig
 import java.time.Duration
 import org.bson.BsonDocument
 import org.slf4j.Logger
