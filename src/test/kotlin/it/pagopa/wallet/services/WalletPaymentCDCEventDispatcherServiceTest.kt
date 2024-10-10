@@ -5,7 +5,7 @@ import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracedMono
 import it.pagopa.wallet.common.tracing.TracingUtilsTest
-import it.pagopa.wallet.config.RetrySendPolicyConfig
+import it.pagopa.wallet.config.properties.RetrySendPolicyConfig
 import it.pagopa.wallet.config.properties.CdcQueueConfig
 import java.time.Duration
 import java.util.*

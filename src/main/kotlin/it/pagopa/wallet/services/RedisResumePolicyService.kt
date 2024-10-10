@@ -1,6 +1,6 @@
 package it.pagopa.wallet.services
 
-import it.pagopa.wallet.config.RedisResumePolicyConfig
+import it.pagopa.wallet.config.properties.RedisResumePolicyConfig
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit

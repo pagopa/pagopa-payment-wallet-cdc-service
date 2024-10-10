@@ -1,10 +1,9 @@
 package it.pagopa.wallet.cdc
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument
-import it.pagopa.wallet.config.ChangeStreamOptionsConfig
-import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
-import it.pagopa.wallet.config.RetrySendPolicyConfig
+import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.services.ResumePolicyService
+import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import java.time.Instant
 import org.bson.BsonDocument
 import org.bson.Document
@@ -28,7 +27,6 @@ class PaymentWalletsLogEventsStreamTest {
     private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService =
         mock()
     private val resumePolicyService: ResumePolicyService = mock()
-    private val retrySendPolicyConfig: RetrySendPolicyConfig = RetrySendPolicyConfig(1, 100)
     private val changeStreamOptionsConfig: ChangeStreamOptionsConfig =
         ChangeStreamOptionsConfig("collection", ArrayList(), "project")
     private val mongoConverter: MongoConverter = mock()
@@ -40,10 +38,9 @@ class PaymentWalletsLogEventsStreamTest {
             PaymentWalletsLogEventsStream(
                 reactiveMongoTemplate,
                 changeStreamOptionsConfig,
-                retrySendPolicyConfig,
+                walletPaymentCDCEventDispatcherService,
                 resumePolicyService,
-                1,
-                walletPaymentCDCEventDispatcherService
+                1
             )
     }
 
@@ -137,7 +134,6 @@ class PaymentWalletsLogEventsStreamTest {
 
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
-        given { expectedMockDocument.raw }.willThrow(IllegalArgumentException())
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
             .willThrow(IllegalArgumentException::class)
 

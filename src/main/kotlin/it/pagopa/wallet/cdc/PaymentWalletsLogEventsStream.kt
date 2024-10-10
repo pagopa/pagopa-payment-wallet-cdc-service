@@ -1,9 +1,7 @@
 package it.pagopa.wallet.cdc
 
-import it.pagopa.wallet.config.ChangeStreamOptionsConfig
-import it.pagopa.wallet.config.RetrySendPolicyConfig
+import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.services.ResumePolicyService
-import java.time.Duration
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import java.time.Instant
 import kotlin.math.absoluteValue
@@ -21,15 +19,13 @@ import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.util.function.Tuple2
-import reactor.util.retry.Retry
 
 @Component
 class PaymentWalletsLogEventsStream(
     @Autowired private val reactiveMongoTemplate: ReactiveMongoTemplate,
     @Autowired private val changeStreamOptionsConfig: ChangeStreamOptionsConfig,
     @Autowired
-    private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService
-    @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig,
+    private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService,
     @Autowired private val redisResumePolicyService: ResumePolicyService,
     @Value("\${cdc.resume.saveInterval}") private val saveInterval: Int
 ) : ApplicationListener<ApplicationReadyEvent> {
@@ -78,9 +74,7 @@ class PaymentWalletsLogEventsStream(
         return flux
     }
 
-    private fun saveToken(
-        tuple: Tuple2<Long, ChangeStreamEvent<BsonDocument>>
-    ): Mono<ChangeStreamEvent<BsonDocument>> {
+    private fun saveToken(tuple: Tuple2<Long, BsonDocument>): Mono<BsonDocument> {
         return Mono.defer {
                 if (tuple.t1.absoluteValue.plus(1).mod(saveInterval) == 0) {
                     redisResumePolicyService.saveResumeTimestamp(Instant.now())
