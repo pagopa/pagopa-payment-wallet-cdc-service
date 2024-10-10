@@ -6,5 +6,69 @@
     "_exporter_id": "23963988"
   },
   "item": [
+    {
+      "name": "Create new wallet",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[Wallet for onboarding CARDS] New wallet created successfully with POST /wallets\", function () {",
+              "    pm.response.to.have.status(201);",
+              "    const redirectUrl = pm.response.json().redirectUrl;",
+              "    pm.expect(redirectUrl).to.be.a(\"string\");",
+              "    pm.expect(redirectUrl).to.be.include(\"creditcard#\");",
+              "    const fragment = redirectUrl.split(\"#\")[1];",
+              "    const fragmentSplits = fragment.split(\"&\");",
+              "    const walletId = fragmentSplits[0].split(\"=\")[1];",
+              "    const useDiagnosticTracing = fragmentSplits[1].split(\"=\")[1];",
+              "    const paymentMethodId = fragmentSplits[2].split(\"=\")[1];",
+              "    pm.expect(walletId).to.be.not.null;",
+              "    pm.expect(useDiagnosticTracing).to.be.not.null;",
+              "    pm.expect(useDiagnosticTracing).to.be.eq(pm.environment.get(\"USE_DIAGNOSTIC_TRACING\"));",
+              "    pm.expect(paymentMethodId).to.be.eq(pm.environment.get(\"PAYMENT_METHOD_ID\"));",
+              "    pm.environment.set(\"WALLET_ID\", walletId);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-user-id",
+            "value": "{{x-user-id}}",
+            "type": "text"
+          },
+          {
+            "key": "x-client-id",
+            "value": "IO",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"applications\": [\n    \"PAGOPA\"\n  ],\n  \"useDiagnosticTracing\": {{USE_DIAGNOSTIC_TRACING}},\n  \"paymentMethodId\": \"{{PAYMENT_METHOD_ID}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{WALLET_HOSTNAME}}/wallets",
+          "host": [
+            "{{WALLET_HOSTNAME}}"
+          ],
+          "path": [
+            "wallets"
+          ]
+        }
+      },
+      "response": []
+    }
   ]
 }

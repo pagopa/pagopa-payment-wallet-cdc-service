@@ -3,13 +3,69 @@
   "name": "Wallet local env CDC",
   "values": [
     {
-      "key": "HOSTNAME",
+      "key": "WALLET_HOSTNAME",
       "value": "http://localhost:8200",
       "enabled": true
     },
     {
       "key": "x-user-id",
       "value": "8b264e06-d257-4735-b35a-7d28b99f5a0c",
+      "enabled": true
+    }, {
+      "key": "x-user-id",
+      "value": "8b264e06-d257-4735-b35a-7d28b99f5a0c",
+      "enabled": true
+    },
+    {
+      "key": "SHARED_SESSION_TOKEN",
+      "value": "",
+      "type": "any",
+      "enabled": true
+    },
+    {
+      "key": "WALLET_TOKEN_TEST",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "ENV",
+      "value": "https://api.dev.platform.pagopa.it",
+      "enabled": true
+    },
+    {
+      "key": "SERVICE",
+      "value": "/io-payment-wallet/v1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "PAYMENT_METHOD_NAME",
+      "value": "CARDS",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "PAYMENT_METHOD_ID",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "USE_DIAGNOSTIC_TRACING",
+      "value": "true",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "WALLET_ID",
+      "value": "test",
+      "enabled": true
+    },
+    {
+      "key": "SESSION_TOKEN",
+      "value": "",
+      "type": "default",
       "enabled": true
     }
   ],

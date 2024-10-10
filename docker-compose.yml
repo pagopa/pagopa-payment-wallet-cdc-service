@@ -1,13 +1,26 @@
 services:
+  pagopa-wallet:
+    container_name: pagopa-wallet-service
+    env_file: ./docker/config/wallet/wallet.env
+    build:
+      context: .
+      args:
+        ECOMMERCE_WALLET_COMMIT_SHA: main
+      dockerfile: ./docker/config/wallet/Dockerfile.wallet
+    ports:
+      - "8200:8080"
+    networks:
+      - pagopa-cdc-wallet-net
+
   pagopa-cdc-wallet:
-    container_name: pagopa-cdc-wallet
+    container_name: pagopa-cdc-wallet-service
     build:
       dockerfile: Dockerfile
       context: .
     env_file:
       - ./.env
     ports:
-      - "8200:8080"
+      - "8300:8080"
     depends_on:
       - mongo
     networks:
@@ -36,6 +49,21 @@ services:
       test: echo "db.stats().ok" | mongo --quiet
       interval: 10s
 
+  pagopa-npg-mock:
+    build:
+      context: .
+      dockerfile: ./docker/config/npg-mock/Dockerfile.npg-mock
+    container_name: pagopa-npg-mock
+    volumes:
+      - type: bind
+        source: ./docker/config/npg-mock
+        target: /config
+        read_only: true
+    ports:
+      - "3000:3000"
+    networks:
+      - pagopa-cdc-wallet-net
+
   redis:
     container_name: wallet-cdc-redis
     image: redis@sha256:e422889e156ebea83856b6ff973bfe0c86bce867d80def228044eeecf925592b
@@ -53,6 +81,20 @@ services:
     networks:
       - pagopa-cdc-wallet-net
 
+  ecommerce-payment-methods:
+    build:
+      context: .
+      dockerfile: ./docker/config/ecommerce-payment-methods/Dockerfile.ecommerce-payment-methods
+    container_name: ecommerce-payment-methods
+    volumes:
+      - type: bind
+        source: ./docker/config/ecommerce-payment-methods
+        target: /config
+        read_only: true
+    ports:
+      - "8089:3000"
+    networks:
+      - pagopa-cdc-wallet-net
 
   storage:
     image: mcr.microsoft.com/azure-storage/azurite:latest@sha256:d449d953a1c5bd1e26c800744a65c451e88f3387b696e02e3e2e79a995c3105b
