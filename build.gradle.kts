@@ -44,10 +44,12 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("co.elastic.logging:logback-ecs-encoder:${Dependencies.ecsLoggingVersion}")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
   compileOnly("org.projectlombok:lombok")
   annotationProcessor("org.projectlombok:lombok")
 
@@ -56,6 +58,7 @@ dependencies {
   testImplementation("io.projectreactor:reactor-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+  testImplementation("io.netty:netty-resolver-dns-native-macos:4.1.82.Final:osx-aarch_64")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
   // otel api
@@ -68,6 +71,14 @@ dependencies {
 
   // Byte Buddy
   implementation("net.bytebuddy:byte-buddy:1.15.3")
+}
+
+configurations {
+  implementation.configure {
+    exclude(module = "spring-boot-starter-web")
+    exclude("org.apache.tomcat")
+    exclude(group = "org.slf4j", module = "slf4j-simple")
+  }
 }
 
 kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") } }
