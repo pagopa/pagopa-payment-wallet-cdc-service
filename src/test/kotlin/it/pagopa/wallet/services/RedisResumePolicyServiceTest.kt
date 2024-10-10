@@ -8,9 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.given
-import org.mockito.kotlin.mock
+import org.mockito.kotlin.*
 import org.springframework.test.context.TestPropertySource
 
 @ExtendWith(MockitoExtension::class)
@@ -45,5 +43,15 @@ class RedisResumePolicyServiceTest {
 
         val actual = redisResumePolicyService.getResumeTimestamp()
         Assertions.assertTrue(actual == expected)
+    }
+
+    @Test
+    fun `redis resume policy will save resume timestamp`() {
+        val expected: Instant = Instant.now()
+        doNothing().`when`(redisTemplate).save(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
+
+        redisResumePolicyService.saveResumeTimestamp(expected)
+
+        verify(redisTemplate, times(1)).save(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
     }
 }
