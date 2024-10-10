@@ -28,9 +28,9 @@ class WalletPaymentCDCEventDispatcherService(
             Mono.defer {
                     logger.info(
                         "Handling new change stream event of type {} for wallet with id {} published on {}",
-                        event.getString("_class").value,
-                        event.getString("walletId").value,
-                        event.getString("timestamp").value
+                        event["_class"]?.asString()?.value,
+                        event["walletId"]?.asString()?.value,
+                        event["timestamp"]?.asString()?.value
                     )
                     tracingUtils.traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
                         walletQueueClient.sendWalletEvent(
