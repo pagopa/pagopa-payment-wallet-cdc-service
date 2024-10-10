@@ -57,9 +57,9 @@
           }
         },
         "url": {
-          "raw": "{{HOSTNAME}}/applications",
+          "raw": "{{WALLET_HOSTNAME}}/applications",
           "host": [
-            "{{HOSTNAME}}"
+            "{{WALLET_HOSTNAME}}"
           ],
           "path": [
             "applications"
