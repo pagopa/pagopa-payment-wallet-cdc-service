@@ -9,6 +9,8 @@ services:
       dockerfile: ./docker/config/wallet/Dockerfile.wallet
     ports:
       - "8200:8080"
+    depends_on:
+      - mongo
     networks:
       - pagopa-cdc-wallet-net
 
