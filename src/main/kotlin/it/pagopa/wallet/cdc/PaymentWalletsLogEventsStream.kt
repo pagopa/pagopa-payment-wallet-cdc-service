@@ -80,7 +80,12 @@ class PaymentWalletsLogEventsStream(
     private fun saveToken(tuple: Tuple2<Long, BsonDocument>): Mono<BsonDocument> {
         return Mono.defer {
                 if (tuple.t1.absoluteValue.plus(1).mod(saveInterval) == 0) {
-                    redisResumePolicyService.saveResumeTimestamp(Instant.now())
+                    val documentTimestamp = tuple.t2["timestamp"]?.asString()?.value
+                    val resumeTimestamp =
+                        if (documentTimestamp != null) Instant.parse(documentTimestamp)
+                        else Instant.now()
+
+                    redisResumePolicyService.saveResumeTimestamp(resumeTimestamp)
                 }
                 Mono.just(tuple.t2)
             }
