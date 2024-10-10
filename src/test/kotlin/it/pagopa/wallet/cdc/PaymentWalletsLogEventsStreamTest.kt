@@ -100,7 +100,9 @@ class PaymentWalletsLogEventsStreamTest {
                     BsonDocument(),
                     null,
                     null,
-                    Document("walletId", "testWallet").append("_class", "testEvent"),
+                    Document("walletId", "testWallet")
+                        .append("_class", "testEvent")
+                        .append("timestamp", "2024-09-20T09:16:43.705881111Z"),
                     null,
                     null,
                     null,
@@ -152,7 +154,9 @@ class PaymentWalletsLogEventsStreamTest {
                     BsonDocument(),
                     null,
                     null,
-                    Document("walletId", "testWallet").append("_class", "testEvent"),
+                    Document("walletId", "testWallet")
+                        .append("_class", "testEvent")
+                        .append("timestamp", "2024-09-20T09:16:43.705881111Z"),
                     null,
                     null,
                     null,
@@ -205,7 +209,9 @@ class PaymentWalletsLogEventsStreamTest {
                     BsonDocument(),
                     null,
                     null,
-                    Document("walletId", "testWallet").append("_class", "testEvent"),
+                    Document("walletId", "testWallet")
+                        .append("_class", "testEvent")
+                        .append("timestamp", "2024-09-20T09:16:43.705881111Z"),
                     null,
                     null,
                     null,
