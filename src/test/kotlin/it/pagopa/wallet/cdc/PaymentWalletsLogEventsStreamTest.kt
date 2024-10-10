@@ -142,4 +142,111 @@ class PaymentWalletsLogEventsStreamTest {
 
         verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
     }
+
+    @Test
+    fun `save token throws error and continues to listen`() {
+        val expectedChangeStreamDocument =
+            ChangeStreamEvent(
+                ChangeStreamDocument(
+                    null,
+                    BsonDocument(),
+                    null,
+                    null,
+                    Document("walletId", "testWallet").append("_class", "testEvent"),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ),
+                BsonDocument::class.java,
+                mongoConverter
+            )
+        val bsonDocumentFlux =
+            Flux.just(
+                expectedChangeStreamDocument,
+                expectedChangeStreamDocument,
+                expectedChangeStreamDocument
+            )
+
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willReturn(bsonDocumentFlux)
+
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+
+        given { resumePolicyService.saveResumeTimestamp(anyOrNull()) }
+            .willThrow(IllegalArgumentException::class)
+
+        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
+            .willReturn(Mono.just(BsonDocument()))
+
+        StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
+            .verifyComplete()
+
+        verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
+    }
+
+    @Test
+    fun `save token success and continues to listen`() {
+        val expectedChangeStreamDocument =
+            ChangeStreamEvent(
+                ChangeStreamDocument(
+                    null,
+                    BsonDocument(),
+                    null,
+                    null,
+                    Document("walletId", "testWallet").append("_class", "testEvent"),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ),
+                BsonDocument::class.java,
+                mongoConverter
+            )
+        val bsonDocumentFlux =
+            Flux.just(
+                expectedChangeStreamDocument,
+                expectedChangeStreamDocument,
+                expectedChangeStreamDocument
+            )
+
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willReturn(bsonDocumentFlux)
+
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+
+        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+
+        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
+            .willReturn(Mono.just(BsonDocument()))
+
+        StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
+            .expectNextCount(3)
+            .verifyComplete()
+
+        verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
+        verify(resumePolicyService, times(3)).saveResumeTimestamp(anyOrNull())
+    }
 }

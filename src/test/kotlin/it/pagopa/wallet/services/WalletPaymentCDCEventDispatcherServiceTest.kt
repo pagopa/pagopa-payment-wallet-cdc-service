@@ -38,6 +38,7 @@ class WalletPaymentCDCEventDispatcherServiceTest {
         val walletCreatedLoggingEvent =
             BsonDocument("_class", BsonString("class")).apply {
                 append("walletId", BsonString(walletId))
+                append("timestamp", BsonString("timestamp"))
             }
 
         given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
@@ -70,6 +71,7 @@ class WalletPaymentCDCEventDispatcherServiceTest {
         val walletCreatedLoggingEvent =
             BsonDocument("_class", BsonString("class")).apply {
                 append("walletId", BsonString(walletId))
+                append("timestamp", BsonString("timestamp"))
             }
 
         given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
