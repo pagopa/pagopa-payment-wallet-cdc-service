@@ -76,6 +76,9 @@ microservice-chart:
     OTEL_METRICS_EXPORTER: otlp
     OTEL_LOGS_EXPORTER: otlp
     OTEL_TRACES_SAMPLER: "always_on"
+    CDC_QUEUE_NAME: pagopa-d-itn-pay-wallet-cdc-queue
+    CDC_QUEUE_TTL_SECONDS: "7200"
+    CDC_QUEUE_VISIBILITY_TIMEOUT_SECONDS: "0"
     MONGO_HOST: pagopa-d-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
     MONGO_USERNAME: pagopa-d-itn-pay-wallet-cosmos-account
     MONGO_PORT: "10255"
@@ -106,6 +109,7 @@ microservice-chart:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     MONGO_PASSWORD: mongo-wallet-password
     REDIS_PASSWORD: redis-wallet-password
+    CDC_QUEUE_CONNECTION_STRING: wallet-storage-connection-string
   keyvault:
     name: "pagopa-d-pay-wallet-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"

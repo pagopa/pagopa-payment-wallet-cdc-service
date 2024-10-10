@@ -4,6 +4,7 @@ import it.pagopa.wallet.config.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.RetrySendPolicyConfig
 import it.pagopa.wallet.services.ResumePolicyService
 import java.time.Duration
+import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import java.time.Instant
 import kotlin.math.absoluteValue
 import org.bson.BsonDocument
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
-import org.springframework.data.mongodb.core.ChangeStreamEvent
 import org.springframework.data.mongodb.core.ChangeStreamOptions
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
@@ -27,6 +27,8 @@ import reactor.util.retry.Retry
 class PaymentWalletsLogEventsStream(
     @Autowired private val reactiveMongoTemplate: ReactiveMongoTemplate,
     @Autowired private val changeStreamOptionsConfig: ChangeStreamOptionsConfig,
+    @Autowired
+    private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService
     @Autowired private val retrySendPolicyConfig: RetrySendPolicyConfig,
     @Autowired private val redisResumePolicyService: ResumePolicyService,
     @Value("\${cdc.resume.saveInterval}") private val saveInterval: Int
@@ -37,8 +39,8 @@ class PaymentWalletsLogEventsStream(
         this.streamPaymentWalletsLogEvents().subscribe()
     }
 
-    fun streamPaymentWalletsLogEvents(): Flux<ChangeStreamEvent<BsonDocument>> {
-        val flux: Flux<ChangeStreamEvent<BsonDocument>> =
+    fun streamPaymentWalletsLogEvents(): Flux<BsonDocument> {
+        val flux: Flux<BsonDocument> =
             reactiveMongoTemplate
                 .changeStream(
                     changeStreamOptionsConfig.collection,
@@ -59,24 +61,13 @@ class PaymentWalletsLogEventsStream(
                 // Process the elements of the Flux
                 .flatMap {
                     Mono.defer {
-                            logger.info(
-                                "Handling new change stream event of type {} for wallet with id {} created on {}",
-                                it.raw?.fullDocument?.get("_class"),
-                                it.raw?.fullDocument?.get("walletId"),
-                                it.raw?.fullDocument?.get("timestamp")
+                            walletPaymentCDCEventDispatcherService.dispatchEvent(
+                                it.raw?.fullDocument?.toBsonDocument()
                             )
-                            Mono.just(it)
                         }
-                        .retryWhen(
-                            Retry.fixedDelay(
-                                    retrySendPolicyConfig.maxAttempts,
-                                    Duration.ofMillis(retrySendPolicyConfig.intervalInMs)
-                                )
-                                .filter { t -> t is Exception }
-                        )
                         .onErrorResume {
                             logger.error("Error during event handling : ", it)
-                            Mono.empty<ChangeStreamEvent<BsonDocument>>()
+                            Mono.empty<BsonDocument>()
                         }
                 }
                 // Save resume token every n emitted elements
