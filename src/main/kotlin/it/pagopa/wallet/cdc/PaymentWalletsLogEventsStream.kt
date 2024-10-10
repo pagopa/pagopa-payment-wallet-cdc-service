@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
+import org.springframework.data.mongodb.core.ChangeStreamEvent
 import org.springframework.data.mongodb.core.ChangeStreamOptions
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
@@ -55,23 +56,25 @@ class PaymentWalletsLogEventsStream(
                     BsonDocument::class.java
                 )
                 // Process the elements of the Flux
-                .flatMap {
-                    Mono.defer {
-                            walletPaymentCDCEventDispatcherService.dispatchEvent(
-                                it.raw?.fullDocument?.toBsonDocument()
-                            )
-                        }
-                        .onErrorResume {
-                            logger.error("Error during event handling : ", it)
-                            Mono.empty<BsonDocument>()
-                        }
-                }
+                .flatMap { processEvent(it) }
                 // Save resume token every n emitted elements
                 .index()
                 .flatMap { saveToken(it) }
                 .doOnError { logger.error("Error listening to change stream: ", it) }
 
         return flux
+    }
+
+    private fun processEvent(event: ChangeStreamEvent<BsonDocument>): Mono<BsonDocument> {
+        return Mono.defer {
+                walletPaymentCDCEventDispatcherService.dispatchEvent(
+                    event.raw?.fullDocument?.toBsonDocument()
+                )
+            }
+            .onErrorResume {
+                logger.error("Error during event handling : ", it)
+                Mono.empty()
+            }
     }
 
     private fun saveToken(tuple: Tuple2<Long, BsonDocument>): Mono<BsonDocument> {
