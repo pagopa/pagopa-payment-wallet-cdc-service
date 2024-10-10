@@ -7,6 +7,75 @@
   },
   "item": [
     {
+      "name": "Start session",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[Wallet for IO - Wallet Payment] - Start session\", () => {",
+              "  pm.response.to.have.status(201);",
+              "  const responseJson = pm.response.json();",
+              "  pm.environment.set(\"SHARED_SESSION_TOKEN\", responseJson.token);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{WALLET_TOKEN_TEST}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "x-user-id",
+            "value": "{{x-user-id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "headerFamily": "json",
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{ENV}}/session-wallet/v1/session",
+          "host": [
+            "{{ENV}}"
+          ],
+          "path": [
+            "session-wallet",
+            "v1",
+            "session"
+          ]
+        },
+        "description": "Creates a new wallet"
+      },
+      "response": []
+    },
+    {
       "name": "Create new wallet",
       "event": [
         {
