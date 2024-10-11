@@ -77,7 +77,9 @@ class PaymentWalletsLogEventsStream(
             }
     }
 
-    private fun saveCdcResumeToken(changeEventFluxIndex: Tuple2<Long, BsonDocument>): Mono<BsonDocument> {
+    private fun saveCdcResumeToken(
+        changeEventFluxIndex: Tuple2<Long, BsonDocument>
+    ): Mono<BsonDocument> {
         return Mono.defer {
                 if (changeEventFluxIndex.t1.absoluteValue.plus(1).mod(saveInterval) == 0) {
                     val documentTimestamp = changeEventFluxIndex.t2["timestamp"]?.asString()?.value
