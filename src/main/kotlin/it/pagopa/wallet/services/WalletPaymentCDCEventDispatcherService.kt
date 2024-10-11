@@ -2,8 +2,8 @@ package it.pagopa.wallet.services
 
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracingUtils
-import it.pagopa.wallet.config.RetrySendPolicyConfig
 import it.pagopa.wallet.config.properties.CdcQueueConfig
+import it.pagopa.wallet.config.properties.RetrySendPolicyConfig
 import java.time.Duration
 import org.bson.BsonDocument
 import org.slf4j.Logger
@@ -27,9 +27,10 @@ class WalletPaymentCDCEventDispatcherService(
         if (event != null) {
             Mono.defer {
                     logger.info(
-                        "Handling new change stream event of type {} for wallet with id {}",
-                        event.getString("_class").value,
-                        event.getString("walletId").value
+                        "Handling new change stream event of type {} for wallet with id {} published on {}",
+                        event["_class"]?.asString()?.value,
+                        event["walletId"]?.asString()?.value,
+                        event["timestamp"]?.asString()?.value
                     )
                     tracingUtils.traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
                         walletQueueClient.sendWalletEvent(
