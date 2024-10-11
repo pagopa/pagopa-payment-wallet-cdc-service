@@ -4,7 +4,6 @@ import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import java.time.Instant
-import kotlin.math.absoluteValue
 import org.bson.BsonDocument
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,7 +84,7 @@ class PaymentWalletsLogEventsStream(
         changeEventDocument: BsonDocument
     ): Mono<BsonDocument> {
         return Mono.defer {
-                if (changeEventFluxIndex.absoluteValue.plus(1).mod(saveInterval) == 0) {
+                if (changeEventFluxIndex.plus(1).mod(saveInterval) == 0) {
                     val documentTimestamp = changeEventDocument["timestamp"]?.asString()?.value
                     val resumeTimestamp =
                         if (documentTimestamp != null) Instant.parse(documentTimestamp)
