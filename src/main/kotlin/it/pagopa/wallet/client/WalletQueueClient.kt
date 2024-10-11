@@ -21,7 +21,7 @@ class WalletQueueClient(
         delay: Duration,
         tracingInfo: QueueTracingInfo,
     ): Mono<Response<SendMessageResult>> {
-        val queueEvent = QueueEvent(event, tracingInfo)
+        val queueEvent = QueueEvent(event.toJson(), tracingInfo)
         return BinaryData.fromObjectAsync(queueEvent, jsonSerializer).flatMap {
             cdcQueueClient.sendMessageWithResponse(it, delay, ttl)
         }
