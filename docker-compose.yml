@@ -51,21 +51,6 @@ services:
       test: echo "db.stats().ok" | mongo --quiet
       interval: 10s
 
-  pagopa-npg-mock:
-    build:
-      context: .
-      dockerfile: ./docker/config/npg-mock/Dockerfile.npg-mock
-    container_name: pagopa-npg-mock
-    volumes:
-      - type: bind
-        source: ./docker/config/npg-mock
-        target: /config
-        read_only: true
-    ports:
-      - "3000:3000"
-    networks:
-      - pagopa-cdc-wallet-net
-
   redis:
     container_name: wallet-redis
     image: redis@sha256:e422889e156ebea83856b6ff973bfe0c86bce867d80def228044eeecf925592b
@@ -80,21 +65,6 @@ services:
     image: redislabs/redisinsight@sha256:bbfe06e00282fc051bbfadd49286865e75b359baea62f0d56af0cb0d5684b942
     ports:
       - "8001:8001"
-    networks:
-      - pagopa-cdc-wallet-net
-
-  ecommerce-payment-methods:
-    build:
-      context: .
-      dockerfile: ./docker/config/ecommerce-payment-methods/Dockerfile.ecommerce-payment-methods
-    container_name: ecommerce-payment-methods
-    volumes:
-      - type: bind
-        source: ./docker/config/ecommerce-payment-methods
-        target: /config
-        read_only: true
-    ports:
-      - "8089:3000"
     networks:
       - pagopa-cdc-wallet-net
 
@@ -119,6 +89,7 @@ services:
       - storage
     environment:
       QUEUE_EXPIRATION_WALLET: pagopa-wallet-expiration-queue
+      QUEUE_CDC_WALLET: pagopa-wallet-cdc-queue
     networks:
       - pagopa-cdc-wallet-net
 
