@@ -1,4 +1,4 @@
-package it.pagopa.wallet.config
+package it.pagopa.wallet.config.properties
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
