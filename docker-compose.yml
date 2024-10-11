@@ -80,7 +80,7 @@ services:
     networks:
       - pagopa-cdc-wallet-net
 
-  azurite-cdc-init:
+  azurite-cdc-init-and-check:
     container_name: pagopa-wallet-azurite-cdc-init
     build:
       context: azurite/
