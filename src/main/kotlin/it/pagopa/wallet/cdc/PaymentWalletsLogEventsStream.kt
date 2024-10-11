@@ -4,7 +4,6 @@ import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import java.time.Instant
-import kotlin.math.absoluteValue
 import org.bson.BsonDocument
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,7 +18,6 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.util.function.Tuple2
 
 @Component
 class PaymentWalletsLogEventsStream(
@@ -58,8 +56,12 @@ class PaymentWalletsLogEventsStream(
                 // Process the elements of the Flux
                 .flatMap { processEvent(it) }
                 // Save resume token every n emitted elements
-                .index()
-                .flatMap { saveToken(it) }
+                .index { changeEventFluxIndex, changeEventDocument ->
+                    Pair(changeEventFluxIndex, changeEventDocument)
+                }
+                .flatMap { (changeEventFluxIndex, changeEventDocument) ->
+                    saveCdcResumeToken(changeEventFluxIndex, changeEventDocument)
+                }
                 .doOnError { logger.error("Error listening to change stream: ", it) }
 
         return flux
@@ -77,17 +79,20 @@ class PaymentWalletsLogEventsStream(
             }
     }
 
-    private fun saveToken(tuple: Tuple2<Long, BsonDocument>): Mono<BsonDocument> {
+    private fun saveCdcResumeToken(
+        changeEventFluxIndex: Long,
+        changeEventDocument: BsonDocument
+    ): Mono<BsonDocument> {
         return Mono.defer {
-                if (tuple.t1.absoluteValue.plus(1).mod(saveInterval) == 0) {
-                    val documentTimestamp = tuple.t2["timestamp"]?.asString()?.value
+                if (changeEventFluxIndex.plus(1).mod(saveInterval) == 0) {
+                    val documentTimestamp = changeEventDocument["timestamp"]?.asString()?.value
                     val resumeTimestamp =
                         if (documentTimestamp != null) Instant.parse(documentTimestamp)
                         else Instant.now()
 
                     redisResumePolicyService.saveResumeTimestamp(resumeTimestamp)
                 }
-                Mono.just(tuple.t2)
+                Mono.just(changeEventDocument)
             }
             .onErrorResume {
                 logger.error("Error saving resume policy: ", it)
