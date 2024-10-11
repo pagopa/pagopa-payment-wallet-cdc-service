@@ -34,4 +34,3 @@ RUN true
 
 
 ENTRYPOINT ["java","-javaagent:opentelemetry-javaagent.jar", "--enable-preview","org.springframework.boot.loader.launch.JarLauncher"]
-

@@ -1,13 +1,28 @@
 services:
+  pagopa-wallet:
+    container_name: pagopa-wallet-service
+    env_file: ./docker/config/wallet/wallet.env
+    build:
+      context: .
+      args:
+        ECOMMERCE_WALLET_COMMIT_SHA: main
+      dockerfile: ./docker/config/wallet/Dockerfile.wallet
+    ports:
+      - "8200:8080"
+    depends_on:
+      - mongo
+    networks:
+      - pagopa-cdc-wallet-net
+
   pagopa-cdc-wallet:
-    container_name: pagopa-cdc-wallet
+    container_name: pagopa-cdc-wallet-service
     build:
       dockerfile: Dockerfile
       context: .
     env_file:
       - ./.env
     ports:
-      - "8200:8080"
+      - "8300:8080"
     depends_on:
       - mongo
     networks:
@@ -37,7 +52,7 @@ services:
       interval: 10s
 
   redis:
-    container_name: wallet-cdc-redis
+    container_name: wallet-redis
     image: redis@sha256:e422889e156ebea83856b6ff973bfe0c86bce867d80def228044eeecf925592b
     command: [ "sh", "-c", 'exec redis-server --requirepass "$$REDIS_PASSWORD"' ]
     ports:
@@ -46,17 +61,16 @@ services:
       - pagopa-cdc-wallet-net
 
   redis-insight:
-    container_name: wallet-cdc-redis-insight
+    container_name: wallet-redis-insight
     image: redislabs/redisinsight@sha256:bbfe06e00282fc051bbfadd49286865e75b359baea62f0d56af0cb0d5684b942
     ports:
       - "8001:8001"
     networks:
       - pagopa-cdc-wallet-net
 
-
   storage:
     image: mcr.microsoft.com/azure-storage/azurite:latest@sha256:d449d953a1c5bd1e26c800744a65c451e88f3387b696e02e3e2e79a995c3105b
-    container_name: pagopa-cdc-wallet-azurite
+    container_name: pagopa-wallet-azurite
     ports:
       - "10000:10000"
       - "10001:10001"
@@ -66,15 +80,16 @@ services:
     networks:
       - pagopa-cdc-wallet-net
 
-  azurite-init:
-    container_name: pagopa-cdc-wallet-azurite-init
+  azurite-cdc-init-and-check:
+    container_name: pagopa-wallet-azurite-cdc-init
     build:
       context: azurite/
       dockerfile: Dockerfile
     depends_on:
       - storage
     environment:
-      QUEUE_EXPIRATION_WALLET: pagopa-cdc-wallet-expiration-queue
+      QUEUE_EXPIRATION_WALLET: pagopa-wallet-expiration-queue
+      QUEUE_CDC_WALLET: pagopa-wallet-cdc-queue
     networks:
       - pagopa-cdc-wallet-net
 

@@ -1,0 +1,69 @@
+{
+  "id": "2344b916-4f0f-45f8-8c96-11e7ca59e1e3",
+  "name": "Wallet local env CDC",
+  "values": [
+    {
+      "key": "WALLET_HOSTNAME",
+      "value": "http://localhost:8200",
+      "enabled": true
+    },
+    {
+      "key": "ENV",
+      "value": "https://api.dev.platform.pagopa.it",
+      "enabled": true
+    },
+    {
+      "key": "x-user-id",
+      "value": "8b264e06-d257-4735-b35a-7d28b99f5a0c",
+      "enabled": true
+    }, {
+      "key": "x-user-id",
+      "value": "8b264e06-d257-4735-b35a-7d28b99f5a0c",
+      "enabled": true
+    },
+    {
+      "key": "SHARED_SESSION_TOKEN",
+      "value": "",
+      "type": "any",
+      "enabled": true
+    },
+    {
+      "key": "WALLET_TOKEN_TEST",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "PAYMENT_METHOD_NAME",
+      "value": "CARDS",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "PAYMENT_METHOD_ID",
+      "value": "378d0b4f-8b69-46b0-8215-07785fe1aad4",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "USE_DIAGNOSTIC_TRACING",
+      "value": "true",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "WALLET_ID",
+      "value": "test",
+      "enabled": true
+    },
+    {
+      "key": "SESSION_TOKEN",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2023-11-08T22:30:57.522Z",
+  "_postman_exported_using": "Postman/10.19.17"
+}
