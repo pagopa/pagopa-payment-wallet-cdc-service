@@ -59,7 +59,7 @@ class PaymentWalletsLogEventsStream(
                 .flatMap { processEvent(it) }
                 // Save resume token every n emitted elements
                 .index()
-                .flatMap { saveToken(it) }
+                .flatMap { saveCdcResumeToken(it) }
                 .doOnError { logger.error("Error listening to change stream: ", it) }
 
         return flux
@@ -77,17 +77,17 @@ class PaymentWalletsLogEventsStream(
             }
     }
 
-    private fun saveToken(tuple: Tuple2<Long, BsonDocument>): Mono<BsonDocument> {
+    private fun saveCdcResumeToken(changeEventFluxIndex: Tuple2<Long, BsonDocument>): Mono<BsonDocument> {
         return Mono.defer {
-                if (tuple.t1.absoluteValue.plus(1).mod(saveInterval) == 0) {
-                    val documentTimestamp = tuple.t2["timestamp"]?.asString()?.value
+                if (changeEventFluxIndex.t1.absoluteValue.plus(1).mod(saveInterval) == 0) {
+                    val documentTimestamp = changeEventFluxIndex.t2["timestamp"]?.asString()?.value
                     val resumeTimestamp =
                         if (documentTimestamp != null) Instant.parse(documentTimestamp)
                         else Instant.now()
 
                     redisResumePolicyService.saveResumeTimestamp(resumeTimestamp)
                 }
-                Mono.just(tuple.t2)
+                Mono.just(changeEventFluxIndex.t2)
             }
             .onErrorResume {
                 logger.error("Error saving resume policy: ", it)
