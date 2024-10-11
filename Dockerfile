@@ -21,7 +21,7 @@ WORKDIR /app/
 ARG EXTRACTED=/workspace/app/build/extracted
 
 #ELK Agent
-ADD --chown=user https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.2.0/opentelemetry-javaagent.jar .
+ADD --chown=user https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.25.1/opentelemetry-javaagent.jar .
 
 COPY --from=build --chown=user ${EXTRACTED}/dependencies/ ./
 RUN true
@@ -31,7 +31,6 @@ COPY --from=build --chown=user ${EXTRACTED}/snapshot-dependencies/ ./
 RUN true
 COPY --from=build --chown=user ${EXTRACTED}/application/ ./
 RUN true
-
 
 ENTRYPOINT ["java","-javaagent:opentelemetry-javaagent.jar", "--enable-preview","org.springframework.boot.loader.launch.JarLauncher"]
 

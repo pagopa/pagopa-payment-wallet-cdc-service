@@ -2,6 +2,8 @@
 
 echo "Analizing env variables"
 queues=$(env | grep '^QUEUE_' | sed -n "s/^\(.*\)=.*/\1/p")
+echo "Found queues -> $queues,"
+
 for queue in $queues
     do
         queue_value=$(eval "echo \$$queue")
