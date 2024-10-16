@@ -83,12 +83,7 @@ class PaymentWalletsLogEventsStream(
                 if (changeEventFluxIndex.plus(1).mod(saveInterval) == 0) {
                     val documentTimestamp = changeEventDocument.getString("timestamp")
                     val resumeTimestamp =
-                        if (
-                            documentTimestamp != null &&
-                                documentTimestamp.isNotEmpty() &&
-                                documentTimestamp.isNotBlank()
-                        )
-                            Instant.parse(documentTimestamp)
+                        if (!documentTimestamp.isNullOrBlank()) Instant.parse(documentTimestamp)
                         else Instant.now()
 
                     redisResumePolicyService.saveResumeTimestamp(resumeTimestamp)
