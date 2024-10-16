@@ -266,9 +266,12 @@ class PaymentWalletsLogEventsStreamTest {
 
     @Test
     fun `document with null, empty and blank timestamp and continues to listen`() {
-        val expectedDocumentNull = ChangeStreamDocumentUtil.getDocument("testWallet", "testEvent", null)
-        val expectedDocumentEmpty = ChangeStreamDocumentUtil.getDocument("testWallet", "testEvent", "")
-        val expectedDocumentBlank = ChangeStreamDocumentUtil.getDocument("testWallet", "testEvent", "  ")
+        val expectedDocumentNull =
+            ChangeStreamDocumentUtil.getDocument("testWallet", "testEvent", null)
+        val expectedDocumentEmpty =
+            ChangeStreamDocumentUtil.getDocument("testWallet", "testEvent", "")
+        val expectedDocumentBlank =
+            ChangeStreamDocumentUtil.getDocument("testWallet", "testEvent", "  ")
         val expectedChangeStreamDocumentNull =
             ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocumentNull, mongoConverter)
         val expectedChangeStreamDocumentEmpty =
