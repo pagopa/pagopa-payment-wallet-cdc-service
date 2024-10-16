@@ -1,19 +1,16 @@
 package it.pagopa.wallet.cdc
 
-import com.mongodb.client.model.changestream.ChangeStreamDocument
 import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import it.pagopa.wallet.util.ChangeStreamDocumentUtil
 import java.time.Instant
 import org.bson.BsonDocument
-import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
-import org.springframework.data.mongodb.core.ChangeStreamEvent
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.convert.MongoConverter
 import org.springframework.test.context.TestPropertySource
@@ -48,30 +45,13 @@ class PaymentWalletsLogEventsStreamTest {
     @Test
     fun `change stream produces new Document`() {
         val expectedDocument =
-            Document("walletId", "testWallet")
-                .append("_class", "testEvent")
-                .append("timestamp", "2024-09-20T09:16:43.705881111Z")
-        val expectedChangeStreamDocument =
-            ChangeStreamEvent(
-                ChangeStreamDocument(
-                    null,
-                    BsonDocument(),
-                    null,
-                    null,
-                    expectedDocument,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                ),
-                BsonDocument::class.java,
-                mongoConverter
+            ChangeStreamDocumentUtil.getDocument(
+                "testWallet",
+                "testEvent",
+                "2024-09-20T09:16:43.705881111Z"
             )
+        val expectedChangeStreamDocument =
+            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocument, mongoConverter)
         val bsonDocumentFlux = Flux.just(expectedChangeStreamDocument)
 
         given {
@@ -97,29 +77,14 @@ class PaymentWalletsLogEventsStreamTest {
 
     @Test
     fun `change stream throws error and continues to listen`() {
-        val expectedChangeStreamDocument =
-            ChangeStreamEvent(
-                ChangeStreamDocument(
-                    null,
-                    BsonDocument(),
-                    null,
-                    null,
-                    Document("walletId", "testWallet")
-                        .append("_class", "testEvent")
-                        .append("timestamp", "2024-09-20T09:16:43.705881111Z"),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                ),
-                BsonDocument::class.java,
-                mongoConverter
+        val expectedDocument =
+            ChangeStreamDocumentUtil.getDocument(
+                "testWallet",
+                "testEvent",
+                "2024-09-20T09:16:43.705881111Z"
             )
+        val expectedChangeStreamDocument =
+            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocument, mongoConverter)
         val bsonDocumentFlux =
             Flux.just(
                 expectedChangeStreamDocument,
@@ -152,30 +117,13 @@ class PaymentWalletsLogEventsStreamTest {
     @Test
     fun `save token throws error and continues to listen`() {
         val expectedDocument =
-            Document("walletId", "testWallet")
-                .append("_class", "testEvent")
-                .append("timestamp", "2024-09-20T09:16:43.705881111Z")
-        val expectedChangeStreamDocument =
-            ChangeStreamEvent(
-                ChangeStreamDocument(
-                    null,
-                    BsonDocument(),
-                    null,
-                    null,
-                    expectedDocument,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                ),
-                BsonDocument::class.java,
-                mongoConverter
+            ChangeStreamDocumentUtil.getDocument(
+                "testWallet",
+                "testEvent",
+                "2024-09-20T09:16:43.705881111Z"
             )
+        val expectedChangeStreamDocument =
+            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocument, mongoConverter)
         val bsonDocumentFlux =
             Flux.just(
                 expectedChangeStreamDocument,
@@ -209,30 +157,13 @@ class PaymentWalletsLogEventsStreamTest {
     @Test
     fun `save token success and continues to listen`() {
         val expectedDocument =
-            Document("walletId", "testWallet")
-                .append("_class", "testEvent")
-                .append("timestamp", "2024-09-20T09:16:43.705881111Z")
-        val expectedChangeStreamDocument =
-            ChangeStreamEvent(
-                ChangeStreamDocument(
-                    null,
-                    BsonDocument(),
-                    null,
-                    null,
-                    expectedDocument,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                ),
-                BsonDocument::class.java,
-                mongoConverter
+            ChangeStreamDocumentUtil.getDocument(
+                "testWallet",
+                "testEvent",
+                "2024-09-20T09:16:43.705881111Z"
             )
+        val expectedChangeStreamDocument =
+            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocument, mongoConverter)
         val bsonDocumentFlux =
             Flux.just(
                 expectedChangeStreamDocument,
