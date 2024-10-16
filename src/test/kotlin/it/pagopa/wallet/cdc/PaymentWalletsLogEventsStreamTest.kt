@@ -4,6 +4,7 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument
 import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
+import it.pagopa.wallet.util.ChangeStreamDocumentUtil
 import java.time.Instant
 import org.bson.BsonDocument
 import org.bson.Document
@@ -254,6 +255,48 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
             .willReturn(Mono.just(expectedDocument))
+
+        StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
+            .expectNextCount(3)
+            .verifyComplete()
+
+        verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
+        verify(resumePolicyService, times(3)).saveResumeTimestamp(anyOrNull())
+    }
+
+    @Test
+    fun `document with null, empty and blank timestamp and continues to listen`() {
+        val expectedDocumentNull = ChangeStreamDocumentUtil.getDocument("testWallet", "testEvent", null)
+        val expectedDocumentEmpty = ChangeStreamDocumentUtil.getDocument("testWallet", "testEvent", "")
+        val expectedDocumentBlank = ChangeStreamDocumentUtil.getDocument("testWallet", "testEvent", "  ")
+        val expectedChangeStreamDocumentNull =
+            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocumentNull, mongoConverter)
+        val expectedChangeStreamDocumentEmpty =
+            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocumentEmpty, mongoConverter)
+        val expectedChangeStreamDocumentBlank =
+            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocumentBlank, mongoConverter)
+        val bsonDocumentFlux =
+            Flux.just(
+                expectedChangeStreamDocumentNull,
+                expectedChangeStreamDocumentEmpty,
+                expectedChangeStreamDocumentBlank
+            )
+
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willReturn(bsonDocumentFlux)
+
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+
+        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+
+        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
+            .willReturn(Mono.just(expectedDocumentNull))
 
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .expectNextCount(3)

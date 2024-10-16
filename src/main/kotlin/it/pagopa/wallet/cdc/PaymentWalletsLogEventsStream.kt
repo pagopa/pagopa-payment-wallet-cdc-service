@@ -81,7 +81,7 @@ class PaymentWalletsLogEventsStream(
     ): Mono<Document> {
         return Mono.defer {
                 if (changeEventFluxIndex.plus(1).mod(saveInterval) == 0) {
-                    val documentTimestamp = changeEventDocument["timestamp"].toString()
+                    val documentTimestamp = changeEventDocument.getString("timestamp")
                     val resumeTimestamp =
                         if (
                             documentTimestamp != null &&
