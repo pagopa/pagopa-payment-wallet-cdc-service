@@ -231,6 +231,8 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
             .willReturn(Mono.just(expectedDocumentNull))
+            .willReturn(Mono.just(expectedDocumentEmpty))
+            .willReturn(Mono.just(expectedDocumentBlank))
 
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .expectNextCount(3)
