@@ -46,7 +46,10 @@ class PaymentWalletsLogEventsStreamTest {
 
     @Test
     fun `change stream produces new Document`() {
-        val expectedDocument = BsonDocument()
+        val expectedDocument =
+            Document("walletId", "testWallet")
+                .append("_class", "testEvent")
+                .append("timestamp", "2024-09-20T09:16:43.705881111Z")
         val expectedChangeStreamDocument =
             ChangeStreamEvent(
                 ChangeStreamDocument(
@@ -54,7 +57,7 @@ class PaymentWalletsLogEventsStreamTest {
                     BsonDocument(),
                     null,
                     null,
-                    Document("walletId", "testWallet").append("_class", "testEvent"),
+                    expectedDocument,
                     null,
                     null,
                     null,
@@ -147,6 +150,10 @@ class PaymentWalletsLogEventsStreamTest {
 
     @Test
     fun `save token throws error and continues to listen`() {
+        val expectedDocument =
+            Document("walletId", "testWallet")
+                .append("_class", "testEvent")
+                .append("timestamp", "2024-09-20T09:16:43.705881111Z")
         val expectedChangeStreamDocument =
             ChangeStreamEvent(
                 ChangeStreamDocument(
@@ -154,9 +161,7 @@ class PaymentWalletsLogEventsStreamTest {
                     BsonDocument(),
                     null,
                     null,
-                    Document("walletId", "testWallet")
-                        .append("_class", "testEvent")
-                        .append("timestamp", "2024-09-20T09:16:43.705881111Z"),
+                    expectedDocument,
                     null,
                     null,
                     null,
@@ -192,7 +197,7 @@ class PaymentWalletsLogEventsStreamTest {
             .willThrow(IllegalArgumentException::class)
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
-            .willReturn(Mono.just(BsonDocument()))
+            .willReturn(Mono.just(expectedDocument))
 
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .verifyComplete()
@@ -202,6 +207,10 @@ class PaymentWalletsLogEventsStreamTest {
 
     @Test
     fun `save token success and continues to listen`() {
+        val expectedDocument =
+            Document("walletId", "testWallet")
+                .append("_class", "testEvent")
+                .append("timestamp", "2024-09-20T09:16:43.705881111Z")
         val expectedChangeStreamDocument =
             ChangeStreamEvent(
                 ChangeStreamDocument(
@@ -209,9 +218,7 @@ class PaymentWalletsLogEventsStreamTest {
                     BsonDocument(),
                     null,
                     null,
-                    Document("walletId", "testWallet")
-                        .append("_class", "testEvent")
-                        .append("timestamp", "2024-09-20T09:16:43.705881111Z"),
+                    expectedDocument,
                     null,
                     null,
                     null,
@@ -246,7 +253,7 @@ class PaymentWalletsLogEventsStreamTest {
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
-            .willReturn(Mono.just(BsonDocument()))
+            .willReturn(Mono.just(expectedDocument))
 
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .expectNextCount(3)

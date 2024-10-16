@@ -9,8 +9,7 @@ import it.pagopa.wallet.config.properties.CdcQueueConfig
 import it.pagopa.wallet.config.properties.RetrySendPolicyConfig
 import java.time.Duration
 import java.util.*
-import org.bson.BsonDocument
-import org.bson.BsonString
+import org.bson.Document
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
@@ -36,10 +35,9 @@ class WalletPaymentCDCEventDispatcherServiceTest {
     fun `should dispatch WalletCreatedEvent from WalletAdded domain event`() {
         val walletId = UUID.randomUUID().toString()
         val walletCreatedLoggingEvent =
-            BsonDocument("_class", BsonString("class")).apply {
-                append("walletId", BsonString(walletId))
-                append("timestamp", BsonString("timestamp"))
-            }
+            Document("walletId", walletId)
+                .append("_class", "testEvent")
+                .append("timestamp", "2024-09-20T09:16:43.705881111Z")
 
         given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
             .willAnswer { Mono.just(mock() as Response<SendMessageResult>) }
@@ -50,7 +48,7 @@ class WalletPaymentCDCEventDispatcherServiceTest {
             .assertNext { Assertions.assertEquals(walletCreatedLoggingEvent, it) }
             .verifyComplete()
 
-        argumentCaptor<BsonDocument> {
+        argumentCaptor<Document> {
             verify(walletQueueClient, times(1))
                 .sendWalletEvent(
                     capture(),
@@ -69,10 +67,9 @@ class WalletPaymentCDCEventDispatcherServiceTest {
     fun `should dispatch WalletCreatedEvent from WalletAdded domain event on second retry`() {
         val walletId = UUID.randomUUID().toString()
         val walletCreatedLoggingEvent =
-            BsonDocument("_class", BsonString("class")).apply {
-                append("walletId", BsonString(walletId))
-                append("timestamp", BsonString("timestamp"))
-            }
+            Document("walletId", walletId)
+                .append("_class", "testEvent")
+                .append("timestamp", "2024-09-20T09:16:43.705881111Z")
 
         given { walletQueueClient.sendWalletEvent(any(), any(), any()) }
             .willAnswer {
