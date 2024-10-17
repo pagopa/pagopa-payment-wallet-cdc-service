@@ -20,7 +20,7 @@ services:
       dockerfile: Dockerfile
       context: .
     env_file:
-      - ./.env
+      - ./docker/config/wallet-cdc/wallet-cdc.env
     ports:
       - "8300:8080"
     depends_on:
