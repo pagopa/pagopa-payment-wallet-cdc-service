@@ -1,16 +1,37 @@
 services:
-  pagopa-wallet:
-    container_name: pagopa-wallet-service
-    env_file: ./docker/config/wallet/wallet.env
-    build:
-      context: .
-      args:
-        ECOMMERCE_WALLET_COMMIT_SHA: main
-      dockerfile: ./docker/config/wallet/Dockerfile.wallet
+
+  mongo-express:
+    container_name: pagopa-cdc-wallet-mongo-express
+    image: mongo-express@sha256:1b23d7976f0210dbec74045c209e52fbb26d29b2e873d6c6fa3d3f0ae32c2a64
+    env_file: ./docker/config/mongo/mongo-express.env
     ports:
-      - "8200:8080"
+      - "8201:8081"
+    networks:
+      - pagopa-cdc-wallet-net
     depends_on:
       - mongo
+
+  mongo:
+    container_name: mongodb
+    image: mongo@sha256:7b225d4ae2df7cf98812f27f5d0d98054efaf9bfd4cc79c7e3e0bed1c1d3bf45
+    environment:
+      MONGO_INITDB_DATABASE: payment-wallet
+    command: [ "--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    ports:
+      - 27017:27017
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'host.docker.internal:27017'}]}) }" | mongosh --port 27017 --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      start_interval: 1s
+      retries: 30
+    volumes:
+      - "mongo1_data:/data/db"
+      - "mongo1_config:/data/configdb"
+
     networks:
       - pagopa-cdc-wallet-net
 
@@ -27,29 +48,8 @@ services:
       - mongo
     networks:
       - pagopa-cdc-wallet-net
-
-  mongo-express:
-    container_name: pagopa-cdc-wallet-mongo-express
-    image: mongo-express@sha256:1b23d7976f0210dbec74045c209e52fbb26d29b2e873d6c6fa3d3f0ae32c2a64
-    env_file: ./docker/config/mongo/mongo-express.env
-    ports:
-      - "8201:8081"
-    networks:
-      - pagopa-cdc-wallet-net
-    depends_on:
-      - mongo
-
-  mongo:
-    container_name: pagopa-cdc-wallet-mongo
-    image: mongo@sha256:7b225d4ae2df7cf98812f27f5d0d98054efaf9bfd4cc79c7e3e0bed1c1d3bf45
-    env_file: ./docker/config/mongo/mongodb.env
-    ports:
-      - "28017:27017"
-    networks:
-      - pagopa-cdc-wallet-net
-    healthcheck:
-      test: echo "db.stats().ok" | mongo --quiet
-      interval: 10s
+    volumes:
+      - ./docker/config/wallet-cdc/application.properties:/config/application.properties
 
   redis:
     container_name: wallet-redis
@@ -80,10 +80,10 @@ services:
     networks:
       - pagopa-cdc-wallet-net
 
-  azurite-cdc-init-and-check:
+  azurite-cdc:
     container_name: pagopa-wallet-azurite-cdc-init
     build:
-      context: azurite/
+      context: docker/config/azurite/
       dockerfile: Dockerfile
     depends_on:
       - storage
@@ -101,4 +101,6 @@ networks:
         - subnet: 10.21.0.0/16
           gateway: 10.21.0.1
 
-
+volumes:
+  mongo1_data:
+  mongo1_config:

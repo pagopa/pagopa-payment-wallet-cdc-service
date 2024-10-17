@@ -73,12 +73,4 @@ stages:
           - script: |
               timeout 180 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8200/actuator/health/liveness)" != "200" ]]; do sleep 5; done' || exit 1
             displayName: 'Health check'
-          - template: azure-templates/api-tests.yml
-            parameters:
-              TEST_DISPLAY_NAME: "Payment Wallet CDC"
-              ENV_FILE: "api-tests/wallet_local_cdc.environment.json"
-              API_TEST_FILE: "api-tests/wallet_local_cdc.collection.tests.json"
-              TEST_FILE_PREFIX: "wallet-api-test-cdc"
-              WALLET_TOKEN_TEST: $(WALLET_CDC_TOKEN_TEST_DEV)
-
 
