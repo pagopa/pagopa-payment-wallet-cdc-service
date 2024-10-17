@@ -5,12 +5,12 @@ import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import java.time.Instant
 import org.bson.BsonDocument
+import org.bson.Document
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
-import org.springframework.data.mongodb.core.ChangeStreamEvent
 import org.springframework.data.mongodb.core.ChangeStreamOptions
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
@@ -34,8 +34,8 @@ class PaymentWalletsLogEventsStream(
         this.streamPaymentWalletsLogEvents().subscribe()
     }
 
-    fun streamPaymentWalletsLogEvents(): Flux<BsonDocument> {
-        val flux: Flux<BsonDocument> =
+    fun streamPaymentWalletsLogEvents(): Flux<Document> {
+        val flux: Flux<Document> =
             reactiveMongoTemplate
                 .changeStream(
                     changeStreamOptionsConfig.collection,
@@ -54,7 +54,7 @@ class PaymentWalletsLogEventsStream(
                     BsonDocument::class.java
                 )
                 // Process the elements of the Flux
-                .flatMap { processEvent(it) }
+                .flatMap { processEvent(it.raw?.fullDocument) }
                 // Save resume token every n emitted elements
                 .index { changeEventFluxIndex, changeEventDocument ->
                     Pair(changeEventFluxIndex, changeEventDocument)
@@ -67,12 +67,8 @@ class PaymentWalletsLogEventsStream(
         return flux
     }
 
-    private fun processEvent(event: ChangeStreamEvent<BsonDocument>): Mono<BsonDocument> {
-        return Mono.defer {
-                walletPaymentCDCEventDispatcherService.dispatchEvent(
-                    event.raw?.fullDocument?.toBsonDocument()
-                )
-            }
+    private fun processEvent(event: Document?): Mono<Document> {
+        return Mono.defer { walletPaymentCDCEventDispatcherService.dispatchEvent(event) }
             .onErrorResume {
                 logger.error("Error during event handling : ", it)
                 Mono.empty()
@@ -81,13 +77,13 @@ class PaymentWalletsLogEventsStream(
 
     private fun saveCdcResumeToken(
         changeEventFluxIndex: Long,
-        changeEventDocument: BsonDocument
-    ): Mono<BsonDocument> {
+        changeEventDocument: Document
+    ): Mono<Document> {
         return Mono.defer {
                 if (changeEventFluxIndex.plus(1).mod(saveInterval) == 0) {
-                    val documentTimestamp = changeEventDocument["timestamp"]?.asString()?.value
+                    val documentTimestamp = changeEventDocument.getString("timestamp")
                     val resumeTimestamp =
-                        if (documentTimestamp != null) Instant.parse(documentTimestamp)
+                        if (!documentTimestamp.isNullOrBlank()) Instant.parse(documentTimestamp)
                         else Instant.now()
 
                     redisResumePolicyService.saveResumeTimestamp(resumeTimestamp)
