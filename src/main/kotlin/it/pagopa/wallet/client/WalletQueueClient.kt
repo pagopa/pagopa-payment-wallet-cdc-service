@@ -8,7 +8,7 @@ import com.azure.storage.queue.models.SendMessageResult
 import it.pagopa.wallet.common.QueueEvent
 import it.pagopa.wallet.common.tracing.QueueTracingInfo
 import java.time.Duration
-import org.bson.BsonDocument
+import org.bson.Document
 import reactor.core.publisher.Mono
 
 class WalletQueueClient(
@@ -17,11 +17,11 @@ class WalletQueueClient(
     private val ttl: Duration
 ) {
     fun sendWalletEvent(
-        event: BsonDocument,
+        event: Document,
         delay: Duration,
         tracingInfo: QueueTracingInfo,
     ): Mono<Response<SendMessageResult>> {
-        val queueEvent = QueueEvent(event.toJson(), tracingInfo)
+        val queueEvent = QueueEvent(event, tracingInfo)
         return BinaryData.fromObjectAsync(queueEvent, jsonSerializer).flatMap {
             cdcQueueClient.sendMessageWithResponse(it, delay, ttl)
         }
