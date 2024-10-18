@@ -64,13 +64,25 @@ stages:
   - stage: IntegrationTest
     dependsOn: [ ]
     jobs:
-      - job: make_integration_test
+      - job: Integration_Test
         steps:
-          - script: cp .env.local .env
-            displayName: 'Setup env for localhost'
           - script: docker compose up -d
-            displayName: 'Run app with docker-compose'
+            displayName: '[Integration test] Run app with docker-compose'
           - script: |
               timeout 180 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8300/actuator/health/liveness)" != "200" ]]; do sleep 5; done' || exit 1
-            displayName: 'Health check'
+            displayName: '[Integration test] Health check pagopa-payment-wallet-cdc-service'
+          - script: |
+              event=$(az storage message peek \
+                  --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;QueueEndpoint=http://localhost:10001/devstoreaccount1" \
+                  --queue-name "pagopa-wallet-cdc-queue" \
+                  --output tsv --query '[0].content')
 
+              echo "Event: $event"
+
+              if [ "$event" == "$(EXPECTED_MESSAGE)" ]; then
+                echo "test passed successfully"
+              else
+                echo "fail! unexpected event $(EXPECTED_MESSAGE)"
+                exit 1   
+              fi
+            displayName: '[Integration test] Read cdc event from Azurite queue and validate'
