@@ -3,22 +3,21 @@ services:
   mongo-express:
     container_name: pagopa-cdc-wallet-mongo-express
     image: mongo-express@sha256:1b23d7976f0210dbec74045c209e52fbb26d29b2e873d6c6fa3d3f0ae32c2a64
-    env_file: ./docker/config/mongo/mongo-express.env
+    env_file: docker-local/mongo/mongo-express.env
     ports:
       - "8201:8081"
     networks:
       - pagopa-cdc-wallet-net
     depends_on:
-      - mongo
+      - mongodb
 
-  mongo:
+  mongodb:
     container_name: mongodb
-    image: mongo@sha256:7b225d4ae2df7cf98812f27f5d0d98054efaf9bfd4cc79c7e3e0bed1c1d3bf45
-    environment:
-      MONGO_INITDB_DATABASE: payment-wallet
-    command: [ "--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    image: mongo:6@sha256:28bf77ff23511baafb3262d7e6f5ae3634e784662e147ef4f6950a07a43c5eab
+    restart: always
+    command: [ "--replSet", "rs0", "--bind_ip_all", "--noauth", "--port", "27017"]
     ports:
-      - 27017:27017
+      - "27017:27017"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
@@ -26,12 +25,17 @@ services:
       interval: 5s
       timeout: 30s
       start_period: 0s
-      start_interval: 1s
       retries: 30
     volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
+      - data:/data/db
+    networks:
+      - pagopa-cdc-wallet-net
 
+  wallet-events-producer-testing:
+    build: docker-local/wallet-events-producer-testing
+    container_name: wallet-events-producer-testing
+    depends_on:
+      - mongodb
     networks:
       - pagopa-cdc-wallet-net
 
@@ -41,15 +45,15 @@ services:
       dockerfile: Dockerfile
       context: .
     env_file:
-      - ./docker/config/wallet-cdc/wallet-cdc.env
+      - docker-local/wallet-cdc/wallet-cdc.env
     ports:
       - "8300:8080"
     depends_on:
-      - mongo
+      - mongodb
     networks:
       - pagopa-cdc-wallet-net
     volumes:
-      - ./docker/config/wallet-cdc/application.properties:/config/application.properties
+      - ./docker-local/wallet-cdc/application.properties:/config/application.properties
 
   redis:
     container_name: wallet-redis
@@ -83,7 +87,7 @@ services:
   azurite-cdc:
     container_name: pagopa-wallet-azurite-cdc-init
     build:
-      context: docker/config/azurite/
+      context: docker-local/azurite/
       dockerfile: Dockerfile
     depends_on:
       - storage
@@ -102,5 +106,4 @@ networks:
           gateway: 10.21.0.1
 
 volumes:
-  mongodb_data:
-  mongodb_config:
+  data:
