@@ -7,7 +7,7 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-  - stage: BuildEndUnitTest
+  - stage: BuildAndUnitTest
     jobs:
       - job: make_buildEndUnitTest
         steps:
@@ -67,14 +67,13 @@ stages:
       - job: Integration_Test
         steps:
           - script: docker compose up -d
-            displayName: '[Integration test] Run app with docker-compose'
+            displayName: 'Run app with docker-compose'
           - script: |
               timeout 180 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8300/actuator/health/liveness)" != "200" ]]; do sleep 5; done' || exit 1
-            displayName: '[Integration test] Health check pagopa-payment-wallet-cdc-service'
+            displayName: 'Health check pagopa-payment-wallet-cdc-service'
           - script: |
-              event=$(az storage message peek \
-                  --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;QueueEndpoint=http://localhost:10001/devstoreaccount1" \
-                  --queue-name "pagopa-wallet-cdc-queue" \
+              event=$(az storage message get -q pagopa-wallet-expiration-queue  \
+                  --connection-string='DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;QueueEndpoint=http://localhost:10001/devstoreaccount1'
                   --output tsv --query '[0].content')
 
               echo "Event: $event"
@@ -85,4 +84,4 @@ stages:
                 echo "fail! unexpected event $(EXPECTED_MESSAGE)"
                 exit 1   
               fi
-            displayName: '[Integration test] Read cdc event from Azurite queue and validate'
+            displayName: 'Get cdc event from Azurite queue and validate'
