@@ -77,11 +77,11 @@ stages:
                 --queue-name pagopa-wallet-cdc-queue \
                 --output tsv --query '[0].content')
 
-              dataEvent=$(event | jq -r '.data')
+              dataEvent=$(echo $event | jq -r '.data')
               
-              echo "EventData: dataEvent"
+              echo "EventData: $dataEvent"
 
-              if [ "$event" == "test" ]; then
+              if [ "$dataEvent" == "test" ]; then
                 echo "test passed successfully"
               else
                 echo "fail! unexpected event $(EXPECTED_MESSAGE)"
