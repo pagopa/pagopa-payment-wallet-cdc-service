@@ -75,7 +75,7 @@ stages:
               event=$(az storage message peek \
                 --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;QueueEndpoint=http://localhost:10001/devstoreaccount1" \
                 --queue-name pagopa-wallet-cdc-queue \
-                --output tsv --query '[0].content')
+                --output tsv --query '[0].content.data')
 
               echo "Event: $event"
 
