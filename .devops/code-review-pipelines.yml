@@ -66,7 +66,7 @@ stages:
     jobs:
       - job: Integration_Test
         steps:
-          - script: docker compose up
+          - script: docker compose up -d
             displayName: 'Run app with docker-compose'
           - script: |
               timeout 180 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8300/actuator/health/liveness)" != "200" ]]; do sleep 5; done' || exit 1
