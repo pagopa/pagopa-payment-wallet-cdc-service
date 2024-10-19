@@ -26,11 +26,5 @@
     },
     "timestamp": "2024-10-18T09:57:21.003287668Z",
     "_class": "it.pagopa.wallet.audit.WalletOnboardCompletedEvent"
-  },
-  {
-    "_id": "49891292-2670-4bd4-871a-d6f66e083a08",
-    "walletId": "d9bc56ed-232d-4edd-b4ec-8589a8afcabf",
-    "timestamp": "2024-10-18T09:55:43.578793830Z",
-    "_class": "it.pagopa.wallet.audit.SessionWalletCreatedEvent"
   }
 ]
