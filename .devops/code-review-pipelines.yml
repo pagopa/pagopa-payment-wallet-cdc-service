@@ -85,12 +85,12 @@ stages:
               echo "ExpectedEventData: $expectedDataEvent"
 
               normalized_event_expected=$(echo "$eventDataFromQueue" | jq -S .)
-              normalized_event_from_queue=$(echo "$expectedDataEvent" | jq -S .)
+              normalized_event_from_queue=$(echo "$expectedDataEvent" | jq -S .[0])
               
               if [ "$normalized_event_expected" == "$normalized_event_from_queue" ]; then
                 echo "test passed successfully"
               else
-                echo "fail! unexpected event $(expectedDataEvent)"
+                echo "fail! unexpected event"
                 exit 1   
               fi
             displayName: 'Get cdc event from Azurite queue and validate'
