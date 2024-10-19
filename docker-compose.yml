@@ -4,6 +4,8 @@ services:
     container_name: pagopa-cdc-wallet-mongo-express
     image: mongo-express@sha256:1b23d7976f0210dbec74045c209e52fbb26d29b2e873d6c6fa3d3f0ae32c2a64
     env_file: docker-local/mongo/mongo-express.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8201:8081"
     networks:
@@ -18,8 +20,10 @@ services:
     command: [ "--replSet", "rs0", "--bind_ip_all", "--noauth", "--port", "27017"]
     ports:
       - "27017:27017"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]}) }" | mongosh --port 27017 --quiet
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'host.docker.internal:27017'}]}) }" | mongosh --port 27017 --quiet
       interval: 5s
       timeout: 30s
       start_period: 0s
@@ -32,6 +36,8 @@ services:
   wallet-events-producer-testing:
     build: docker-local/wallet-events-producer-testing
     container_name: wallet-events-producer-testing
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - mongodb
     networks:
@@ -48,6 +54,8 @@ services:
       - "8300:8080"
     depends_on:
       - mongodb
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - pagopa-cdc-wallet-net
     volumes:
