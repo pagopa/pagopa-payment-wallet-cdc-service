@@ -75,11 +75,13 @@ stages:
               event=$(az storage message peek \
                 --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;QueueEndpoint=http://localhost:10001/devstoreaccount1" \
                 --queue-name pagopa-wallet-cdc-queue \
-                --output tsv --query '[0].content.data')
+                --output tsv --query '[0].content')
 
-              echo "Event: $event"
+              dataEvent=$(event | jq -r '.data')
+              
+              echo "EventData: dataEvent"
 
-              if [ "$event" == "$(EXPECTED_MESSAGE)" ]; then
+              if [ "$event" == "test" ]; then
                 echo "test passed successfully"
               else
                 echo "fail! unexpected event $(EXPECTED_MESSAGE)"
