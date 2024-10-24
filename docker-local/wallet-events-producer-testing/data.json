@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "fb02fa4f-351e-4eb7-b076-c6432a5f14b9",
+    "walletId": "ee3cdefc-5e3b-44cf-a835-fb0401004120",
+    "auditWallet": {
+      "paymentMethodId": "0d1450f4-b993-4f89-af5a-1770a45f5d71",
+      "creationDate": "2024-10-18T09:56:58.606169008Z",
+      "updateDate": "2024-10-18T09:57:20.970676022Z",
+      "applications": [
+        {
+          "_id": "PAGOPA",
+          "status": "ENABLED",
+          "creationDate": "2024-10-18T09:56:58.567973369Z",
+          "updateDate": "2024-10-18T09:56:58.567973656Z",
+          "metadata": {}
+        }
+      ],
+      "details": {
+        "type": "PAYPAL",
+        "pspId": "BCITITMM"
+      },
+      "status": "VALIDATED",
+      "validationOperationId": "234165405314242929",
+      "validationOperationResult": "EXECUTED",
+      "validationOperationTimestamp": "2024-10-18T09:57:19.704Z"
+    },
+    "timestamp": "2024-10-18T09:57:21.003287668Z",
+    "_class": "it.pagopa.wallet.audit.WalletOnboardCompletedEvent"
+  }
+]
