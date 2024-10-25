@@ -1,6 +1,9 @@
 package it.pagopa.wallet.cdc
 
+import com.mongodb.MongoQueryException
+import com.mongodb.ServerAddress
 import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
+import it.pagopa.wallet.config.properties.RetryStreamPolicyConfig
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import it.pagopa.wallet.util.ChangeStreamDocumentUtil
@@ -22,6 +25,7 @@ import reactor.test.StepVerifier
 @TestPropertySource(locations = ["classpath:application-test.properties"])
 class PaymentWalletsLogEventsStreamTest {
     private val reactiveMongoTemplate: ReactiveMongoTemplate = mock()
+    private val retryStreamPolicyConfig: RetryStreamPolicyConfig = RetryStreamPolicyConfig(2, 100)
     private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService =
         mock()
     private val resumePolicyService: ResumePolicyService = mock()
@@ -38,6 +42,7 @@ class PaymentWalletsLogEventsStreamTest {
                 changeStreamOptionsConfig,
                 walletPaymentCDCEventDispatcherService,
                 resumePolicyService,
+                retryStreamPolicyConfig,
                 1
             )
     }
@@ -240,5 +245,30 @@ class PaymentWalletsLogEventsStreamTest {
 
         verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
         verify(resumePolicyService, times(3)).saveResumeTimestamp(anyOrNull())
+    }
+
+    @Test
+    fun `change stream disconnects and retries to listen`() {
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willThrow(MongoQueryException(BsonDocument(), ServerAddress()))
+
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+
+        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+
+        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
+            .willThrow(IllegalArgumentException::class)
+
+        StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
+            .verifyError()
+
+        verify(reactiveMongoTemplate, times(3))
+            .changeStream(anyOrNull(), anyOrNull(), eq(BsonDocument::class.java))
     }
 }

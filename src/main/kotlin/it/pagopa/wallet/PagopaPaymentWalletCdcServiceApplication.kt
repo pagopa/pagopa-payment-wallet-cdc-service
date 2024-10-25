@@ -1,9 +1,6 @@
 package it.pagopa.wallet
 
-import it.pagopa.wallet.config.properties.CdcQueueConfig
-import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
-import it.pagopa.wallet.config.properties.RedisResumePolicyConfig
-import it.pagopa.wallet.config.properties.RetrySendPolicyConfig
+import it.pagopa.wallet.config.properties.*
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
@@ -14,7 +11,8 @@ import reactor.core.publisher.Hooks
     CdcQueueConfig::class,
     ChangeStreamOptionsConfig::class,
     RetrySendPolicyConfig::class,
-    RedisResumePolicyConfig::class
+    RedisResumePolicyConfig::class,
+    RetryStreamPolicyConfig::class
 )
 class PagopaPaymentWalletCdcServiceApplication
 

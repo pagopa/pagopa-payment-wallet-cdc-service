@@ -1,8 +1,11 @@
 package it.pagopa.wallet.cdc
 
+import com.mongodb.MongoServerException
 import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
+import it.pagopa.wallet.config.properties.RetryStreamPolicyConfig
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
+import java.time.Duration
 import java.time.Instant
 import org.bson.BsonDocument
 import org.bson.Document
@@ -18,6 +21,7 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.util.retry.Retry
 
 @Component
 class PaymentWalletsLogEventsStream(
@@ -26,6 +30,7 @@ class PaymentWalletsLogEventsStream(
     @Autowired
     private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService,
     @Autowired private val redisResumePolicyService: ResumePolicyService,
+    @Autowired private val retryStreamPolicyConfig: RetryStreamPolicyConfig,
     @Value("\${cdc.resume.saveInterval}") private val saveInterval: Int
 ) : ApplicationListener<ApplicationReadyEvent> {
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
@@ -36,33 +41,48 @@ class PaymentWalletsLogEventsStream(
 
     fun streamPaymentWalletsLogEvents(): Flux<Document> {
         val flux: Flux<Document> =
-            reactiveMongoTemplate
-                .changeStream(
-                    changeStreamOptionsConfig.collection,
-                    ChangeStreamOptions.builder()
-                        .filter(
-                            Aggregation.newAggregation(
-                                Aggregation.match(
-                                    Criteria.where("operationType")
-                                        .`in`(changeStreamOptionsConfig.operationType)
-                                ),
-                                Aggregation.project(changeStreamOptionsConfig.project)
-                            )
+            Flux.defer {
+                    reactiveMongoTemplate
+                        .changeStream(
+                            changeStreamOptionsConfig.collection,
+                            ChangeStreamOptions.builder()
+                                .filter(
+                                    Aggregation.newAggregation(
+                                        Aggregation.match(
+                                            Criteria.where("operationType")
+                                                .`in`(changeStreamOptionsConfig.operationType)
+                                        ),
+                                        Aggregation.project(changeStreamOptionsConfig.project)
+                                    )
+                                )
+                                .resumeAt(redisResumePolicyService.getResumeTimestamp())
+                                .build(),
+                            BsonDocument::class.java
                         )
-                        .resumeAt(redisResumePolicyService.getResumeTimestamp())
-                        .build(),
-                    BsonDocument::class.java
+                        // Process the elements of the Flux
+                        .flatMap { processEvent(it.raw?.fullDocument) }
+                        // Save resume token every n emitted elements
+                        .index { changeEventFluxIndex, changeEventDocument ->
+                            Pair(changeEventFluxIndex, changeEventDocument)
+                        }
+                        .flatMap { (changeEventFluxIndex, changeEventDocument) ->
+                            saveCdcResumeToken(changeEventFluxIndex, changeEventDocument)
+                        }
+                        .doOnError { logger.error("Error listening to change stream: ", it) }
+                }
+                .retryWhen(
+                    Retry.fixedDelay(
+                            retryStreamPolicyConfig.maxAttempts,
+                            Duration.ofMillis(retryStreamPolicyConfig.intervalInMs)
+                        )
+                        .filter { t -> t is MongoServerException }
+                        .doBeforeRetry { signal ->
+                            logger.warn("Retrying connection to DB: ${signal.failure().message}")
+                        }
                 )
-                // Process the elements of the Flux
-                .flatMap { processEvent(it.raw?.fullDocument) }
-                // Save resume token every n emitted elements
-                .index { changeEventFluxIndex, changeEventDocument ->
-                    Pair(changeEventFluxIndex, changeEventDocument)
+                .doOnError { e ->
+                    logger.error("Failed to connect to DB after retries {}", e.message)
                 }
-                .flatMap { (changeEventFluxIndex, changeEventDocument) ->
-                    saveCdcResumeToken(changeEventFluxIndex, changeEventDocument)
-                }
-                .doOnError { logger.error("Error listening to change stream: ", it) }
 
         return flux
     }
