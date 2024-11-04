@@ -1,6 +1,6 @@
 package it.pagopa.wallet.cdc
 
-import com.mongodb.MongoServerException
+import com.mongodb.MongoException
 import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.properties.RetryStreamPolicyConfig
 import it.pagopa.wallet.services.ResumePolicyService
@@ -75,7 +75,7 @@ class PaymentWalletsLogEventsStream(
                             retryStreamPolicyConfig.maxAttempts,
                             Duration.ofMillis(retryStreamPolicyConfig.intervalInMs)
                         )
-                        .filter { t -> t is MongoServerException }
+                        .filter { t -> t is MongoException }
                         .doBeforeRetry { signal ->
                             logger.warn("Retrying connection to DB: ${signal.failure().message}")
                         }
