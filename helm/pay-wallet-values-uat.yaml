@@ -1,7 +1,7 @@
 microservice-chart:
   namespace: "pay-wallet"
-  nameOverride: ""
-  fullnameOverride: "pagopa-pay-wallet-cdc-service"
+  nameOverride: "b-pagopa-pay-wallet-cdc-service"
+  fullnameOverride: "b-pagopa-pay-wallet-cdc-service"
   canaryDelivery:
     create: false
     ingress:
@@ -51,7 +51,7 @@ microservice-chart:
   ingress:
     create: true
     host: "itnuat.pay-wallet.internal.uat.platform.pagopa.it"
-    path: /pagopa-payment-wallet-cdc-service/(.*)
+    path: /beta/pagopa-payment-wallet-cdc-service/(.*)
     servicePort: 8080
   serviceAccount:
     create: false
@@ -89,7 +89,7 @@ microservice-chart:
       maxSurge: 1
       maxUnavailable: 0
   envConfig:
-    OTEL_SERVICE_NAME: "pagopa-payment-wallet-cc-service"
+    OTEL_SERVICE_NAME: "pagopa-payment-wallet-cc-service-blue"
     OTEL_SERVICE_ENVIRONMENT: "uat"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=uat"
     OTEL_EXPORTER_OTLP_ENDPOINT: "https://weuuat.kibana.internal.uat.platform.pagopa.it/apm"
@@ -98,7 +98,7 @@ microservice-chart:
     OTEL_METRICS_EXPORTER: otlp
     OTEL_LOGS_EXPORTER: otlp
     OTEL_TRACES_SAMPLER: "always_on"
-    CDC_QUEUE_NAME: pagopa-u-itn-pay-wallet-cdc-queue
+    CDC_QUEUE_NAME: pagopa-u-itn-pay-wallet-cdc-queue-b
     CDC_QUEUE_TTL_SECONDS: "7200"
     CDC_QUEUE_VISIBILITY_TIMEOUT_SECONDS: "0"
     MONGO_HOST: pagopa-u-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
