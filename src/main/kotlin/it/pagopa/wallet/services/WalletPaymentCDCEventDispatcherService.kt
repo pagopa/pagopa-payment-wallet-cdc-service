@@ -1,5 +1,7 @@
 package it.pagopa.wallet.services
 
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.Attributes
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracingUtils
 import it.pagopa.wallet.config.properties.CdcQueueConfig
@@ -21,6 +23,10 @@ class WalletPaymentCDCEventDispatcherService(
 ) {
 
     private val WALLET_CDC_EVENT_HANDLER_SPAN_NAME = "cdcWalletEvent"
+    private val WALLET_CDC_EVENT_ENRICHMENT_SPAN_NAME = "cdcWalletEventEnrichment"
+    private val WALLET_CDC_EVENT_TYPE = AttributeKey.stringKey("paymentWallet.ingestion.eventType")
+    private val WALLET_CDC_EVENT_WALLET_ID =
+        AttributeKey.stringKey("paymentWallet.ingestion.walletId")
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
     fun dispatchEvent(event: Document?): Mono<Document> =
@@ -33,6 +39,10 @@ class WalletPaymentCDCEventDispatcherService(
                         event["timestamp"]
                     )
                     tracingUtils.traceMonoQueue(WALLET_CDC_EVENT_HANDLER_SPAN_NAME) { tracingInfo ->
+                        tracingUtils.addSpan(
+                            WALLET_CDC_EVENT_ENRICHMENT_SPAN_NAME,
+                            getSpanAttributes(event)
+                        )
                         walletQueueClient.sendWalletEvent(
                             event = event,
                             delay = Duration.ofSeconds(cdcQueueConfig.visibilityTimeoutWalletCdc),
@@ -57,4 +67,12 @@ class WalletPaymentCDCEventDispatcherService(
         } else {
             Mono.empty()
         }
+
+    private fun getSpanAttributes(event: Document) =
+        Attributes.of(
+            WALLET_CDC_EVENT_WALLET_ID,
+            event["walletId"].toString(),
+            WALLET_CDC_EVENT_TYPE,
+            event["_class"].toString().split("\\.").last()
+        )
 }
