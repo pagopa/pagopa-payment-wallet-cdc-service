@@ -18,7 +18,11 @@ class TracingUtils(private val openTelemetry: OpenTelemetry, private val tracer:
     }
 
     fun addSpan(spanName: String, attributes: Attributes) {
-        val span: Span = tracer.spanBuilder(spanName).startSpan()
+        val span: Span =
+            tracer
+                .spanBuilder(spanName)
+                .setParent(Context.current().with(Span.current()))
+                .startSpan()
         span.setAllAttributes(attributes)
         span.end()
     }

@@ -73,6 +73,6 @@ class WalletPaymentCDCEventDispatcherService(
             WALLET_CDC_EVENT_WALLET_ID,
             event["walletId"].toString(),
             WALLET_CDC_EVENT_TYPE,
-            event["_class"].toString().split("\\.").last()
+            event["_class"].toString().split(".").last()
         )
 }
