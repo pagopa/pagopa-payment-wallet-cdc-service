@@ -86,10 +86,10 @@ microservice-chart:
   strategy:
     type: "RollingUpdate"
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      maxSurge: "100%"
+      maxUnavailable: "100%"
   envConfig:
-    OTEL_SERVICE_NAME: "pagopa-payment-wallet-cc-service"
+    OTEL_SERVICE_NAME: "pagopa-payment-wallet-cdc-service"
     OTEL_SERVICE_ENVIRONMENT: "prod"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=prod"
     OTEL_EXPORTER_OTLP_ENDPOINT: "https://weuprod.kibana.internal.platform.pagopa.it/apm"
