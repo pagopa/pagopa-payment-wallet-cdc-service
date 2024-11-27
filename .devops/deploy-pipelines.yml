@@ -346,12 +346,12 @@ stages:
             displayName: 'newman installation'
 
           - script: |
-              newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json --reporter-json-export Results/newman_report.json
+              newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json > output.txt
             displayName: 'Run API tests (UAT)'
 
           - script: |
               # Extract WALLET_ID from report JSON
-              WALLET_ID=$(jq -r '.run.executions[].assertions[] | select(.error != null) | .error.message | select(test("WALLET_ID=.*")) | match("WALLET_ID=([^ ]+)").captures[0].string' Results/newman_report.json)
+              WALLET_ID=$(grep -oP "WALLET_ID=\K[^\']+" output.txt)
 
               if [ -z "$WALLET_ID" ]; then
                 echo "WALLET_ID non trovato nel report."
