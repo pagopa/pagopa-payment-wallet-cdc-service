@@ -55,7 +55,7 @@ stages:
               cat <<EOL > consumer.properties
               sasl.mechanism=PLAIN
               security.protocol=SASL_SSL
-              sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="\$ConnectionString" password="AZURE_EVENTHUB_CONNECTION_STRING";
+              sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="\$ConnectionString" password="${AZURE_EVENTHUB_CONNECTION_STRING}";
               EOL
               
               # Run the Kafka consumer command
