@@ -40,7 +40,7 @@ stages:
 
   # --- START Validate event in Hub (UAT) --- #
   - stage: EventHubValidation
-    dependsOn: [ ]
+    dependsOn: [UAT_Testing_Generate_Wallet_Event ]
     jobs:
       - job: EventHubValidation
         steps:
