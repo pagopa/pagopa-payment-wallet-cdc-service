@@ -378,9 +378,17 @@ stages:
               export PATH=$PATH:$PWD/kafka_2.13-2.8.0/bin
               # Verify Kafka installation
               kafka-topics.sh --version
-              sleep 15
+              sleep 2
 
-              eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server $(EVENT_HUB_PATH) --topic $(EVENT_HUB_TOPIC) --from-beginning --timeout-ms 5000 --max-messages 1)
+              # Create the consumer properties file
+              cat <<EOL > consumer.properties
+              sasl.mechanism=PLAIN
+              security.protocol=SASL_SSL
+              sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="\$ConnectionString" password="AZURE_EVENTHUB_CONNECTION_STRING";
+              EOL
+                
+              # Run the Kafka consumer command
+              eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server $EVENT_HUB_PATH --topic $EVENT_HUB_TOPIC --from-beginning --timeout-ms 5000 --max-messages 1 --consumer.config consumer.properties)
               expectedDataEventId=$WALLET_ID
   
               echo "event found: $eventFromKafka"
