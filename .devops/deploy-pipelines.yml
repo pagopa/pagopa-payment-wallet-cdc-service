@@ -355,14 +355,6 @@ stages:
               echo "##vso[task.setvariable variable=WALLET_ID]$WALLET_ID"
             displayName: 'Export WALLET_ID to environment variable'
 
-          - task: PublishTestResults@2
-            inputs:
-              testRunTitle: "Run API Tests DataLake Flow (UAT)"
-              testResultsFormat: 'JUnit'
-              testResultsFiles: '**/cdc-api-TEST.xml'
-              searchFolder: '$(System.DefaultWorkingDirectory)'
-            condition: succeededOrFailed()
-
   # --- END of CDC Test suite in UAT --- #
 
 
