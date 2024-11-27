@@ -59,7 +59,7 @@ stages:
               EOL
               
               # Run the Kafka consumer command
-              eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server $EVENT_HUB_PATH --topic $EVENT_HUB_TOPIC --from-beginning --timeout-ms 5000 --max-messages 1 --consumer.config consumer.properties)
+              eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server pagopa-u-itn-observ-evh.servicebus.windows.net:9093 --topic payment-wallet-ingestion-dl --from-beginning --timeout-ms 5000 --max-messages 1 --consumer.config consumer.properties)
               expectedDataEventId=$WALLET_ID
               
               echo "event found: $eventFromKafka"
