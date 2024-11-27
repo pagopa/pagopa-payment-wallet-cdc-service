@@ -14,7 +14,7 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     jobs:
-      - job: api_tests_uat
+      - job: ValidateCDCFlow
         displayName: 'Run API Tests DataLake Flow (UAT)'
         steps:
           - script: |
@@ -37,12 +37,6 @@ stages:
               echo "##vso[task.setvariable variable=WALLET_ID]$WALLET_ID"
             displayName: 'Extract and export WALLET_ID from JSON report'
 
-  # --- START Validate event in Hub (UAT) --- #
-  - stage: EventHubValidation
-    dependsOn: [UAT_Testing_Generate_Wallet_Event ]
-    jobs:
-      - job: EventHubValidation
-        steps:
           - script: |
               wget https://archive.apache.org/dist/kafka/2.8.0/kafka_2.13-2.8.0.tgz
               tar -xzf kafka_2.13-2.8.0.tgz
