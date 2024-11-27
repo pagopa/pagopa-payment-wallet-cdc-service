@@ -380,7 +380,7 @@ stages:
               kafka-topics.sh --version
               sleep 15
 
-              eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server $(EVENT_HUB_PATH) --topic payment-wallet-injection-topic --from-beginning --timeout-ms 5000 --max-messages 1)
+              eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server $(EVENT_HUB_PATH) --topic $(EVENT_HUB_TOPIC) --from-beginning --timeout-ms 5000 --max-messages 1)
               expectedDataEventId=$WALLET_ID
   
               echo "event found: $eventFromKafka"
