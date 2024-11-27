@@ -329,3 +329,73 @@ stages:
                     VALUE_FILE: "helm/pay-wallet-values-uat.yaml"
                     GREEN_VERSION: $(app_version)
   # --- END Deploy UAT --- #
+
+
+  # --- START CDC Test suite in UAT --- #
+  - stage: "GenerateWalletEventsForCDC"
+    pool:
+      vmImage: 'ubuntu-latest'
+    dependsOn: [ Deploy_UAT_Green ]
+    condition: |
+      in(dependencies.Deploy_UAT_Green.result, 'Succeeded', 'Skipped')
+    jobs:
+      - job: api_tests_uat
+        displayName: 'Run API Tests DataLake Flow (UAT)'
+        steps:
+          - script: |
+              yarn global add newman
+            displayName: 'newman installation'
+
+          - script: |
+              newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --reporters cli,junit --reporter-junit-export Results/cdc-api-TEST.xml  > newman_output.txt
+            displayName: 'Run API tests (UAT)'
+
+          - script: |
+              WALLET_ID=$(grep -oP '(?<=WALLET_ID=)[^ ]+' newman_output.txt)
+              echo "##vso[task.setvariable variable=WALLET_ID]$WALLET_ID"
+            displayName: 'Export WALLET_ID to environment variable'
+
+          - task: PublishTestResults@2
+            inputs:
+              testRunTitle: "Run API Tests DataLake Flow (UAT)"
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/cdc-api-TEST.xml'
+              searchFolder: '$(System.DefaultWorkingDirectory)'
+            condition: succeededOrFailed()
+
+  # --- END of CDC Test suite in UAT --- #
+
+
+  # --- START Validate event in Hub (UAT) --- #
+  - stage: EventHubValidation
+    dependsOn: [ ]
+    jobs:
+      - job: EventHubValidation
+        steps:
+          - script: |
+              wget https://archive.apache.org/dist/kafka/2.8.0/kafka_2.13-2.8.0.tgz
+              tar -xzf kafka_2.13-2.8.0.tgz
+              export PATH=$PATH:$PWD/kafka_2.13-2.8.0/bin
+              # Verify Kafka installation
+              kafka-topics.sh --version
+              sleep 15
+
+              eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server $(EVENT_HUB_PATH) --topic payment-wallet-injection-topic --from-beginning --timeout-ms 5000 --max-messages 1)
+              expectedDataEventId=$WALLET_ID
+  
+              echo "event found: $eventFromKafka"
+
+              # Extract the id from the JSON string
+              eventId=$(echo $eventFromKafka | jq -r '.id')
+
+              echo "Extracted event ID: $eventId"
+              echo "Expected event ID: $expectedDataEventId"
+
+              if [ "$eventId" == "$expectedDataEventId" ]; then
+                echo "test passed successfully"
+              else
+                echo "fail! unexpected event"
+                exit 1   
+              fi
+            displayName: 'Validate message in Kafka topic'
+  # --- END Validate event in Hub (UAT) --- #
