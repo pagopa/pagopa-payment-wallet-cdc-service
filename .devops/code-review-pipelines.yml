@@ -7,6 +7,78 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
+  - stage: "UAT_Testing_Generate_Wallet_Event"
+    displayName: "UAT Testing Generate Wallet Event"
+    dependsOn: [ ]
+    pool:
+      vmImage: 'ubuntu-latest'
+    jobs:
+      - job: api_tests_uat
+        displayName: 'Run API Tests DataLake Flow (UAT)'
+        steps:
+          - script: |
+              yarn global add newman
+            displayName: 'newman installation'
+
+          - script: |
+              newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json > output.log
+            displayName: 'Run API tests (UAT)'
+
+          - script: |
+              # Extract WALLET_ID from report JSON
+              WALLET_ID=$(jq -r '.run.executions[].assertions[] | select(.error != null) | .error.message | select(test("WALLET_ID=.*")) | match("WALLET_ID=([^ ]+)").captures[0].string' Results/newman_report.json)
+
+              if [ -z "$WALLET_ID" ]; then
+                echo "WALLET_ID non trovato nel report."
+                exit 1
+              fi
+              echo "WALLET_ID=$WALLET_ID"
+              echo "##vso[task.setvariable variable=WALLET_ID]$WALLET_ID"
+            displayName: 'Extract and export WALLET_ID from JSON report'
+
+
+  # --- START Validate event in Hub (UAT) --- #
+  - stage: EventHubValidation
+    dependsOn: [ ]
+    jobs:
+      - job: EventHubValidation
+        steps:
+          - script: |
+              wget https://archive.apache.org/dist/kafka/2.8.0/kafka_2.13-2.8.0.tgz
+              tar -xzf kafka_2.13-2.8.0.tgz
+              export PATH=$PATH:$PWD/kafka_2.13-2.8.0/bin
+              # Verify Kafka installation
+              kafka-topics.sh --version
+              sleep 5
+
+              # Create the consumer properties file
+              cat <<EOL > consumer.properties
+              sasl.mechanism=PLAIN
+              security.protocol=SASL_SSL
+              sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="\$ConnectionString" password="AZURE_EVENTHUB_CONNECTION_STRING";
+              EOL
+              
+              # Run the Kafka consumer command
+              eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server $EVENT_HUB_PATH --topic $EVENT_HUB_TOPIC --from-beginning --timeout-ms 5000 --max-messages 1 --consumer.config consumer.properties)
+              expectedDataEventId=$WALLET_ID
+              
+              echo "event found: $eventFromKafka"
+
+              # Extract the id from the JSON string
+              eventId=$(echo $eventFromKafka | jq -r '.id')
+
+              echo "Extracted event ID: $eventId"
+              echo "Expected event ID: $expectedDataEventId"
+
+              if [ "$eventId" == "$expectedDataEventId" ]; then
+                echo "test passed successfully"
+              else
+                echo "fail! unexpected event"
+                exit 1   
+              fi
+            displayName: 'Validate message in Kafka topic'
+  # --- END Validate event in Hub (UAT) --- #
+
   - stage: BuildAndUnitTest
     jobs:
       - job: make_buildEndUnitTest

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Generate Wallet to use in CDC" tests="9" time="6.177">
+  <testsuite name="Start session" id="918ab817-aac9-4cf3-8888-3700822d4b5f" timestamp="2024-11-27T13:25:31.318Z" tests="1" failures="0" errors="0" time="0.864">
+    <testcase name="[Wallet for IO - Wallet Payment] - Start session" time="0.864" classname="StartSession"/>
+  </testsuite>
+  <testsuite name="Get payment methods" id="12a93452-33ce-48e3-85f6-9c46ae9c7e1c" timestamp="2024-11-27T13:25:31.318Z" tests="1" failures="0" errors="0" time="0.128">
+    <testcase name="[Wallet for onboarding - CARDS] Payment methods retrieved successfully with GET /payment-methods" time="0.128" classname="GetPaymentMethods"/>
+  </testsuite>
+  <testsuite name="Create a new wallet" id="92208f8f-4b6a-4cdb-905e-7ffddf6d2f87" timestamp="2024-11-27T13:25:31.318Z" tests="2" failures="0" errors="0" time="0.818">
+    <testcase name="WALLET_ID is set" time="0.818" classname="CreateANewWallet"/>
+    <testcase name="[Wallet for onboarding - CARDS] New wallet created successfully with POST /wallets" time="0.818" classname="CreateANewWallet"/>
+  </testsuite>
+  <testsuite name="Get wallet by id" id="a3729421-2afc-4c6a-800a-ff5d1e255fed" timestamp="2024-11-27T13:25:31.318Z" tests="1" failures="0" errors="0" time="0.235">
+    <testcase name="[Wallet for onboarding - CARDS] Wallet retrieved successfully by it's id with GET /wallets/{walletId}" time="0.235" classname="GetWalletById"/>
+  </testsuite>
+  <testsuite name="Create a new session wallet" id="0795c79b-59d8-4cb7-a9d8-25b95a9c6abe" timestamp="2024-11-27T13:25:31.318Z" tests="1" failures="0" errors="0" time="0.718">
+    <testcase name="[Wallet for onboarding - CARDS] New wallet session created successfully with POST /wallets/{walletId}/sessions" time="0.718" classname="CreateANewSessionWallet"/>
+  </testsuite>
+  <testsuite name="Get NPG field (populate NPG cookies)" id="c5defbca-a409-44bf-b845-5b7b404d5afc" timestamp="2024-11-27T13:25:31.318Z" tests="0" failures="0" errors="0" time="0.685"/>
+  <testsuite name="Fill NPG text data (populate iframe card data fields)" id="1dc2c340-0b66-4a13-9628-42fac875cbd4" timestamp="2024-11-27T13:25:31.318Z" tests="0" failures="0" errors="0" time="0.557"/>
+  <testsuite name="Create new validation requests given a initialized wallet Copy" id="fed60e66-be9b-4982-9cdf-a504d88e4a22" timestamp="2024-11-27T13:25:31.318Z" tests="1" failures="0" errors="0" time="2.029">
+    <testcase name="[Wallet for onboarding - CARDS] Session wallet validated successfully with POST /wallets/{walletId}/sessions/{orderId}/validations" time="2.029" classname="CreateNewValidationRequestsGivenAInitializedWalletCopy"/>
+  </testsuite>
+  <testsuite name="Get wallet by user identifier" id="c4d6bc7e-029a-4f7e-9245-36941bbb9fc5" timestamp="2024-11-27T13:25:31.318Z" tests="1" failures="0" errors="0" time="0.143">
+    <testcase name="[Wallet for onboarding - CARDS] Wallet retrieved successfully by it's user id with GET /wallets" time="0.143" classname="GetWalletByUserIdentifier"/>
+  </testsuite>
+</testsuites>

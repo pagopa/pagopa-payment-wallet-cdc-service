@@ -346,7 +346,7 @@ stages:
             displayName: 'newman installation'
 
           - script: |
-              newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json --reporter-json-export Results/newman_report.json
+              newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json > output.log
             displayName: 'Run API tests (UAT)'
 
           - script: |
