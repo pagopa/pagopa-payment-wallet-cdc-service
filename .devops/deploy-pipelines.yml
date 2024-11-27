@@ -332,7 +332,7 @@ stages:
 
 
   # --- START CDC Test suite in UAT --- #
-  - stage: "UAT Testing - Generate Wallet Event"
+  - stage: "UAT Testing Generate Wallet Event"
     pool:
       vmImage: 'ubuntu-latest'
     jobs:
