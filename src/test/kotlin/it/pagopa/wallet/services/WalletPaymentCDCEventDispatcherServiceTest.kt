@@ -2,6 +2,8 @@ package it.pagopa.wallet.services
 
 import com.azure.core.http.rest.Response
 import com.azure.storage.queue.models.SendMessageResult
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.Attributes
 import it.pagopa.wallet.client.WalletQueueClient
 import it.pagopa.wallet.common.tracing.TracedMono
 import it.pagopa.wallet.common.tracing.TracingUtilsTest
@@ -60,6 +62,16 @@ class WalletPaymentCDCEventDispatcherServiceTest {
                 lastValue.getString("walletId")
             )
             verify(tracingUtils, times(1)).traceMonoQueue(any(), any<TracedMono<Any>>())
+            verify(tracingUtils, times(1))
+                .addSpan(
+                    "cdcWalletEventEnrichment",
+                    Attributes.of(
+                        AttributeKey.stringKey("paymentWallet.ingestion.eventType"),
+                        "testEvent",
+                        AttributeKey.stringKey("paymentWallet.ingestion.walletId"),
+                        walletId
+                    )
+                )
         }
     }
 
