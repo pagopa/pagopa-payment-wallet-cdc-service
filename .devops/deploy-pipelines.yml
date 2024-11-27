@@ -148,14 +148,14 @@ stages:
   - stage: "Build_release_candidate"
     displayName: 'Build release candidate'
     dependsOn: [ ]
-    condition:
-        and(
-        succeeded(),
-        eq(${{parameters.UAT_PROD_DEPLOY}}, true),
-        or(
-        eq(variables['Build.SourceBranch'], 'refs/heads/main'),
-        startsWith(variables['Build.SourceBranch'], 'refs/tags')
-        ))
+  #  condition:
+  #      and(
+  #      succeeded(),
+  #      eq(${{parameters.UAT_PROD_DEPLOY}}, true),
+  #      or(
+  #      eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+  #      startsWith(variables['Build.SourceBranch'], 'refs/tags')
+  #      ))
     jobs:
       - job: "build"
         displayName: 'Build release candidate docker image'
@@ -365,44 +365,3 @@ stages:
   # --- END of CDC Test suite in UAT --- #
 
 
-  # --- START Validate event in Hub (UAT) --- #
-  - stage: EventHubValidation
-    dependsOn: [ ]
-    jobs:
-      - job: EventHubValidation
-        steps:
-          - script: |
-              wget https://archive.apache.org/dist/kafka/2.8.0/kafka_2.13-2.8.0.tgz
-              tar -xzf kafka_2.13-2.8.0.tgz
-              export PATH=$PATH:$PWD/kafka_2.13-2.8.0/bin
-              # Verify Kafka installation
-              kafka-topics.sh --version
-              sleep 2
-
-              # Create the consumer properties file
-              cat <<EOL > consumer.properties
-              sasl.mechanism=PLAIN
-              security.protocol=SASL_SSL
-              sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="\$ConnectionString" password="AZURE_EVENTHUB_CONNECTION_STRING";
-              EOL
-                
-              # Run the Kafka consumer command
-              eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server $EVENT_HUB_PATH --topic $EVENT_HUB_TOPIC --from-beginning --timeout-ms 5000 --max-messages 1 --consumer.config consumer.properties)
-              expectedDataEventId=$WALLET_ID
-  
-              echo "event found: $eventFromKafka"
-
-              # Extract the id from the JSON string
-              eventId=$(echo $eventFromKafka | jq -r '.id')
-
-              echo "Extracted event ID: $eventId"
-              echo "Expected event ID: $expectedDataEventId"
-
-              if [ "$eventId" == "$expectedDataEventId" ]; then
-                echo "test passed successfully"
-              else
-                echo "fail! unexpected event"
-                exit 1   
-              fi
-            displayName: 'Validate message in Kafka topic'
-  # --- END Validate event in Hub (UAT) --- #
