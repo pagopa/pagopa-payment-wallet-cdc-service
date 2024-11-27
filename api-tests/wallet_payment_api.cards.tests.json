@@ -166,6 +166,10 @@
 							"    pm.expect(paymentMethodId).to.be.eq(pm.environment.get(\"PAYMENT_METHOD_ID\"));",
 							"    pm.environment.set(\"WALLET_ID\", walletId);",
 							"    pm.environment.set(\"SESSION_TOKEN\", sessionToken);",
+							"    pm.test('WALLET_ID is set', function() {",
+							"       pm.expect(walletId).to.not.be.null;",
+							"       console.log('WALLET_ID=' + walletId);",
+							"    });",
 							"});"
 						],
 						"type": "text/javascript",
