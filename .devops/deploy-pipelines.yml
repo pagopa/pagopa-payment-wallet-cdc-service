@@ -347,13 +347,19 @@ stages:
             displayName: 'newman installation'
 
           - script: |
-              newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --reporters cli,junit --reporter-junit-export Results/cdc-api-TEST.xml  > newman_output.txt
+              newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --reporters cli,junit,json --reporter-json-export Results/newman_report.json
             displayName: 'Run API tests (UAT)'
 
           - script: |
-              WALLET_ID=$(grep -oP '(?<=WALLET_ID=)[^ ]+' newman_output.txt)
+              # Extract WALLET_ID from report JSON
+              WALLET_ID=$(jq -r '.run.executions[0].assertions[] | select(.error != null) | .error.message | select(test("WALLET_ID=.*")) | match("WALLET_ID=([^ ]+)").captures[0].string' Results/newman_report.json)
+              if [ -z "$WALLET_ID" ]; then
+                echo "WALLET_ID non trovato nel report."
+                exit 1
+              fi
+              echo "WALLET_ID=$WALLET_ID"
               echo "##vso[task.setvariable variable=WALLET_ID]$WALLET_ID"
-            displayName: 'Export WALLET_ID to environment variable'
+            displayName: 'Extract and export WALLET_ID from JSON report'
 
   # --- END of CDC Test suite in UAT --- #
 
