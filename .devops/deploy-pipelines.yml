@@ -148,14 +148,14 @@ stages:
   - stage: "Build_release_candidate"
     displayName: 'Build release candidate'
     dependsOn: [ ]
-  #  condition:
-  #      and(
-  #      succeeded(),
-  #      eq(${{parameters.UAT_PROD_DEPLOY}}, true),
-  #      or(
-  #      eq(variables['Build.SourceBranch'], 'refs/heads/main'),
-  #      startsWith(variables['Build.SourceBranch'], 'refs/tags')
-  #      ))
+    #condition:
+    #    and(
+    #    succeeded(),
+    #    eq(${{parameters.UAT_PROD_DEPLOY}}, true),
+    #    or(
+    #    eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+    #    startsWith(variables['Build.SourceBranch'], 'refs/tags')
+    #    ))
     jobs:
       - job: "build"
         displayName: 'Build release candidate docker image'
@@ -332,12 +332,9 @@ stages:
 
 
   # --- START CDC Test suite in UAT --- #
-  - stage: "GenerateWalletEventsForCDC"
+  - stage: "UAT Testing - Generate Wallet Event"
     pool:
       vmImage: 'ubuntu-latest'
-    dependsOn: [ Deploy_UAT_Green ]
-    condition: |
-      in(dependencies.Deploy_UAT_Green.result, 'Succeeded', 'Skipped')
     jobs:
       - job: api_tests_uat
         displayName: 'Run API Tests DataLake Flow (UAT)'
@@ -363,5 +360,4 @@ stages:
             displayName: 'Extract and export WALLET_ID from JSON report'
 
   # --- END of CDC Test suite in UAT --- #
-
 
