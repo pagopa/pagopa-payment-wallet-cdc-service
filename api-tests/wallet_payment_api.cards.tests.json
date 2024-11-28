@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "61df7dfd-a21b-417d-a522-e6cdf1cb155b",
-		"name": "Generate Wallet to use in CDC",
-		"description": "We use a clone of the NPG CARDS test suite to obtain a valid wallet in UAT so we can test later the DataLake CDC flow.",
+		"name": "Get active Wallet and update the application (CDC)",
+		"description": "We usa valid wallet in UAT and change the status of the first active application to generate events, so we can test later the DataLake CDC flow.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
 		"_exporter_id": "36861410"
 	},
