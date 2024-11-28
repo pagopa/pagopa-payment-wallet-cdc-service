@@ -45,6 +45,9 @@ stages:
               kafka-topics.sh --version
               sleep 4
 
+              # Define the Azure Event Hub connection string as var
+              AZURE_EVENTHUB_CONN_STRING=$AZURE_EVENTHUB_CONNECTION_STRING
+              
               # Run the Kafka consumer command
               eventFromKafka=$(kafka-console-consumer.sh \
                 --bootstrap-server pagopa-u-itn-observ-evh.servicebus.windows.net:9093 \
@@ -54,14 +57,16 @@ stages:
                 --max-messages 1 \
                 --consumer-property sasl.mechanism=PLAIN \
                 --consumer-property security.protocol=SASL_SSL \
-                --consumer-property sasl.jaas.config="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$ConnectionString\" password=\"${AZURE_EVENTHUB_CONNECTION_STRING}\";")
-              expectedDataEventId=$WALLET_ID
+                --consumer-property "sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\$ConnectionString\" password=\"$AZURE_EVENTHUB_CONN_STRING\";")
               
-              echo "event found: $eventFromKafka"
+              # Print the event from Kafka
+              echo "Event from Kafka: $eventFromKafka"
 
+              
               # Extract the id from the JSON string
               eventId=$(echo $eventFromKafka | jq -r '.id')
-
+              expectedDataEventId=$WALLET_ID
+              
               echo "Extracted event ID: $eventId"
               echo "Expected event ID: $expectedDataEventId"
 
