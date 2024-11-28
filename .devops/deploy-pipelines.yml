@@ -331,10 +331,9 @@ stages:
   # --- END Deploy UAT --- #
 
   # --- START of Validate event in Hub (UAT) --- #
-
   - stage: "UAT_Testing_Generate_Wallet_Event"
     displayName: "UAT Testing Generate Wallet Event"
-    dependsOn: [ Deploy_UAT_Green]
+    dependsOn: [ ]
     pool:
       vmImage: 'ubuntu-latest'
     jobs:
@@ -344,11 +343,9 @@ stages:
           - script: |
               yarn global add newman
             displayName: 'newman installation'
-
           - script: |
               newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json > output.txt
-            displayName: 'Run API tests (UAT)'
-
+            displayName: 'Run API tests to generate events on Queue for CDC (UAT)'
           - script: |
               # Extract WALLET_ID from report JSON
               WALLET_ID=$(grep -oP "WALLET_ID=\K[^\']+" output.txt)
@@ -360,7 +357,6 @@ stages:
               echo "WALLET_ID=$WALLET_ID"
               echo "##vso[task.setvariable variable=WALLET_ID]$WALLET_ID"
             displayName: 'Extract and export WALLET_ID from JSON report'
-
           - script: |
               wget https://archive.apache.org/dist/kafka/2.8.0/kafka_2.13-2.8.0.tgz
               tar -xzf kafka_2.13-2.8.0.tgz
@@ -368,7 +364,6 @@ stages:
               # Verify Kafka installation
               kafka-topics.sh --version
               sleep 4
-
               # Run the Kafka consumer command
               eventsFromKafka=$(kafka-console-consumer.sh \
                 --bootstrap-server pagopa-u-itn-observ-evh.servicebus.windows.net:9093 \
@@ -388,7 +383,7 @@ stages:
               # Extract the id from the JSON string
               eventId=$(echo $latestEvent | jq -r '.walletId')
               expectedDataEventId=$WALLET_ID
-              
+
               echo "Extracted event ID: $eventId"
               echo "Expected event ID: $expectedDataEventId"
 
@@ -398,12 +393,19 @@ stages:
                 echo "fail! unexpected event"
                 exit 1   
               fi
-              
-              # Check if the timestamp is less than 30 seconds ago
-              if [ $timeDifference -lt 30 ]; then
-                echo "timestamp is less than 30 seconds ago"
+
+              # Extract the timestamp from the JSON string
+              timestamp=$(echo $latestEvent | jq -r '.timestamp')
+
+              # Get the current time and calculate the time difference
+              currentTime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+              timeDifference=$(($(date -d "$currentTime" +%s) - $(date -d "$timestamp" +%s)))
+
+              # Check if the timestamp is less than 30000  ms ago
+              if [ $timeDifference -lt 30000  ]; then
+                echo "timestamp is less than 30000  ms ago"
               else
-                echo "timestamp is more than 30 seconds ago"
+                echo "timestamp is more than 30000  ms ago"
                 exit 1
               fi
             displayName: 'Validate message in Kafka topic'
