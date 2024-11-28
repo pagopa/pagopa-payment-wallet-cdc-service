@@ -74,7 +74,9 @@ stages:
 
               # Extract the timestamp from the JSON string
               timestamp=$(echo $latestEvent | jq -r '.timestamp')
-
+              
+              echo "Event timestamp: $timestamp"
+              
               # Get the current time and calculate the time difference
               currentTime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
               timeDifference=$(($(date -d "$currentTime" +%s) - $(date -d "$timestamp" +%s)))
