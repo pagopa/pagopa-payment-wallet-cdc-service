@@ -354,7 +354,7 @@ stages:
               WALLET_ID=$(grep -oP "WALLET_ID=\K[^\']+" output.txt)
               
               if [ -z "$WALLET_ID" ]; then
-                echo "WALLET_ID non trovato nel report."
+                echo "Cannot extract WALLET_ID from report"
                 exit 1
               fi
               echo "WALLET_ID=$WALLET_ID"
