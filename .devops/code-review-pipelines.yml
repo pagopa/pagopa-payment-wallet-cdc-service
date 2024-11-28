@@ -53,7 +53,7 @@ stages:
                 --bootstrap-server pagopa-u-itn-observ-evh.servicebus.windows.net:9093 \
                 --topic payment-wallet-ingestion-dl \
                 --from-beginning \
-                --timeout-ms 5000 \
+                --timeout-ms 25000 \
                 --max-messages 1 \
                 --consumer-property sasl.mechanism=PLAIN \
                 --consumer-property security.protocol=SASL_SSL \
