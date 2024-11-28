@@ -83,7 +83,8 @@ stages:
               # Get the current time and calculate the time difference
               currentTime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
               timeDifference=$(($(date -d "$currentTime" +%s) - $(date -d "$timestamp" +%s)))
-              
+              echo "Time difference: $timeDifference"
+
               # Check if the timestamp is less than 300 seconds ago
               if [ $timeDifference -lt 300 ]; then
                 echo "timestamp is less than 300 seconds ago"
