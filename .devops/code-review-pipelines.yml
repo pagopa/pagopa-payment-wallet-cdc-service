@@ -54,7 +54,7 @@ stages:
                 --max-messages 1 \
                 --consumer-property sasl.mechanism=PLAIN \
                 --consumer-property security.protocol=SASL_SSL \
-                --consumer-property "sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\$ConnectionString\" password=\"$AZURE_EVENTHUB_CONNECTION_STRING\";")
+                --consumer-property "sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\$ConnectionString\" password=\"$(AZURE_EVENTHUB_CONNECTION_STRING)\";")
               
               # Print the event from Kafka
               echo "Event from Kafka: $eventFromKafka"
