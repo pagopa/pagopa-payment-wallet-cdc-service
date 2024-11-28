@@ -379,9 +379,12 @@ stages:
                 --consumer-property security.protocol=SASL_SSL \
                 --consumer-property "sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\$ConnectionString\" password=\"$(AZURE_EVENTHUB_CONNECTION_STRING)\";")
               
-              # Print the latest event from Kafka
-              latestEvent=$(echo "$eventsFromKafka" | tail -n 1)
-
+              # Filter events by walletId
+              filteredEvents=$(echo "$eventsFromKafka" | jq -c 'select(.walletId == "'$WALLET_ID'")')
+              
+              # Print the latest event from the filtered events
+              latestEvent=$(echo "$filteredEvents" | tail -n 1)
+   
               # Extract the id from the JSON string
               eventId=$(echo $latestEvent | jq -r '.walletId')
               expectedDataEventId=$WALLET_ID
@@ -394,6 +397,14 @@ stages:
               else
                 echo "fail! unexpected event"
                 exit 1   
+              fi
+              
+              # Check if the timestamp is less than 30 seconds ago
+              if [ $timeDifference -lt 30 ]; then
+                echo "timestamp is less than 30 seconds ago"
+              else
+                echo "timestamp is more than 30 seconds ago"
+                exit 1
               fi
             displayName: 'Validate message in Kafka topic'
   # --- END Validate event in Hub (UAT) --- #
