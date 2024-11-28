@@ -81,11 +81,11 @@ stages:
               currentTime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
               timeDifference=$(($(date -d "$currentTime" +%s) - $(date -d "$timestamp" +%s)))
 
-              # Check if the timestamp is less than 30000  ms ago
-              if [ $timeDifference -lt 30000  ]; then
-                echo "timestamp is less than 30000  ms ago"
+              # Check if the timestamp is less than 30  seconds ago
+              if [ $timeDifference -lt 30  ]; then
+                echo "timestamp is less than 30 seconds ago"
               else
-                echo "timestamp is more than 30000  ms ago"
+                echo "timestamp is more than 30 seconds ago"
                 exit 1
               fi
             displayName: 'Validate message in Kafka topic'
