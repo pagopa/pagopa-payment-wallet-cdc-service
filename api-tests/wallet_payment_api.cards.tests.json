@@ -88,6 +88,7 @@
 							"if (validatedWalletId) {",
 							"    pm.environment.set(\"validatedWalletId\", validatedWalletId);",
 							"    console.log(\"Validated Wallet ID:\", validatedWalletId);",
+							"    console.log('WALLET_ID=' + validatedWalletId);",
 							"} else {",
 							"    console.log(\"No validated wallet found.\");",
 							"}",
