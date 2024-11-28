@@ -43,7 +43,7 @@ stages:
               export PATH=$PATH:$PWD/kafka_2.13-2.8.0/bin
               # Verify Kafka installation
               kafka-topics.sh --version
-              sleep 5
+              sleep 4
 
               # Create the consumer properties file
               cat <<EOL > consumer.properties
