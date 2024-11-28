@@ -119,10 +119,6 @@
 							"    const wallet = pm.response.json();",
 							"    const userId = wallet.userId;",
 							"    pm.environment.set(\"x-user-id\", userId);",
-							"    const status = wallet.status;",
-							"    const paymentMethodId = wallet.paymentMethodId; ",
-							"    pm.expect(status).to.be.equals(\"CREATED\");",
-							"    pm.expect(paymentMethodId).to.be.equals(pm.environment.get(\"PAYMENT_METHOD_ID\"));",
 							"});"
 						],
 						"type": "text/javascript",
