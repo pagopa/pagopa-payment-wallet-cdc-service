@@ -76,6 +76,13 @@ stages:
                 echo "fail! unexpected event"
                 exit 1   
               fi
+
+              # Extract the timestamp from the JSON string
+              timestamp=$(echo $latestEvent | jq -r '.timestamp')
+              
+              # Get the current time and calculate the time difference
+              currentTime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+              timeDifference=$(($(date -d "$currentTime" +%s) - $(date -d "$timestamp" +%s)))
               
               # Check if the timestamp is less than 300 seconds ago
               if [ $timeDifference -lt 300 ]; then
