@@ -46,7 +46,7 @@ stages:
               sleep 4
 
               # Define the Azure Event Hub connection string as var
-              AZURE_EVENTHUB_CONN_STRING=$AZURE_EVENTHUB_CONNECTION_STRING
+              AZURE_EVENTHUB_CONN_STRING="$AZURE_EVENTHUB_CONNECTION_STRING"
               
               # Run the Kafka consumer command
               eventFromKafka=$(kafka-console-consumer.sh \
