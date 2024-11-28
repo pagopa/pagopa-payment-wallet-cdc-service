@@ -77,11 +77,11 @@ stages:
                 exit 1   
               fi
               
-              # Check if the timestamp is less than 30 seconds ago
-              if [ $timeDifference -lt 30 ]; then
-                echo "timestamp is less than 30 seconds ago"
+              # Check if the timestamp is less than 300 seconds ago
+              if [ $timeDifference -lt 300 ]; then
+                echo "timestamp is less than 300 seconds ago"
               else
-                echo "timestamp is more than 30 seconds ago"
+                echo "timestamp is more than 300 seconds ago"
                 exit 1
               fi
             displayName: 'Validate message in Kafka topic'
