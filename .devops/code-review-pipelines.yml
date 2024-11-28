@@ -23,6 +23,7 @@ stages:
             displayName: 'newman installation'
           - script: |
               newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json > output.txt
+              cat output.txt
             displayName: 'Run API tests to generate events on Queue for CDC (UAT)'
           - script: |
               # Extract WALLET_ID from report JSON
