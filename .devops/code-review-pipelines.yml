@@ -108,7 +108,7 @@ stages:
   # --- START of Validate event in Hub (UAT) --- #
   - stage: "UAT_Testing_Generate_Wallet_Event"
     displayName: "UAT Testing Generate Wallet Event"
-    dependsOn: []
+    dependsOn: [ Deploy_UAT_Green]
     pool:
       vmImage: 'ubuntu-latest'
     jobs:
@@ -116,7 +116,7 @@ stages:
         displayName: 'Run API Tests DataLake Flow (UAT)'
         steps:
           - checkout: walletTests
-            displayName: "Checkout"
+            displayName: 'Checkout walletTests repository'
           - script: |
               yarn global add newman
             displayName: 'newman installation'
@@ -192,4 +192,3 @@ stages:
               fi
             displayName: 'Validate message in Kafka topic'
   # --- END Validate event in Hub (UAT) --- #
-            displayName: 'Get cdc event from Azurite queue and validate'
