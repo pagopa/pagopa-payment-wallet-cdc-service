@@ -108,7 +108,7 @@ stages:
   # --- START of Validate event in Hub (UAT) --- #
   - stage: "UAT_Testing_Generate_Wallet_Event"
     displayName: "UAT Testing Generate Wallet Event"
-    dependsOn: [ Deploy_UAT_Green]
+    dependsOn: []
     pool:
       vmImage: 'ubuntu-latest'
     jobs:
@@ -116,6 +116,7 @@ stages:
         displayName: 'Run API Tests DataLake Flow (UAT)'
         steps:
           - checkout: walletTests
+            displayName: "Checkout"
           - script: |
               yarn global add newman
             displayName: 'newman installation'
