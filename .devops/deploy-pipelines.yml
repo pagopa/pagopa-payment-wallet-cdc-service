@@ -340,7 +340,7 @@ stages:
       - job: ValidateCDCFlow
         displayName: 'Run API Tests DataLake Flow (UAT)'
         steps:
-          - checkout: walletTests
+          - checkout: pagopaWalletTests
             displayName: 'Checkout walletTests repository'
           - script: |
               yarn global add newman
