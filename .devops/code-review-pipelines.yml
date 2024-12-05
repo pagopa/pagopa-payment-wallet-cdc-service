@@ -116,7 +116,6 @@ stages:
         displayName: 'Run API Tests DataLake Flow (UAT)'
         steps:
           - checkout: walletTests
-            displayName: 'Checkout walletTests repository'
           - script: |
               yarn global add newman
             displayName: 'newman installation'
