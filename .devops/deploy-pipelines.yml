@@ -94,6 +94,12 @@ resources:
       ref: main
       endpoint: 'io-azure-devops-github-ro'
 
+    - repository: walletTests
+      type: github
+      name: pagopa/pagopa-wallet-tests
+      ref: main
+      endpoint: 'io-azure-devops-github-ro'
+
 pool:
   vmImage: ubuntu-latest
 
@@ -340,11 +346,13 @@ stages:
       - job: ValidateCDCFlow
         displayName: 'Run API Tests DataLake Flow (UAT)'
         steps:
+          - checkout: walletTests
+            displayName: 'Checkout walletTests repository'
           - script: |
               yarn global add newman
             displayName: 'newman installation'
           - script: |
-              newman run --ignore-redirects api-tests/wallet_payment_api.cards.tests.json --environment=api-tests/uat.cards.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json > output.txt
+              newman run --ignore-redirects api-tests/api-tests/uat.cdc.update.application.tests.json --environment=api-tests/api-tests/uat.cdc.update.application.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json > output.txt
             displayName: 'Run API tests to generate events on Queue for CDC (UAT)'
           - script: |
               # Extract WALLET_ID from report JSON
