@@ -1,6 +1,6 @@
 group = "it.pagopa.wallet"
 
-version = "0.8.0"
+version = "0.8.1"
 
 description = "pagopa-payment-wallet-cdc-service"
 
