@@ -329,3 +329,92 @@ stages:
                     VALUE_FILE: "helm/pay-wallet-values-uat.yaml"
                     GREEN_VERSION: $(app_version)
   # --- END Deploy UAT --- #
+
+  # --- START of Validate event in Hub (UAT) --- #
+  - stage: "UAT_Testing_Generate_Wallet_Event"
+    displayName: "UAT Testing Generate Wallet Event"
+    dependsOn: [ Deploy_UAT_Green]
+    pool:
+      vmImage: 'ubuntu-latest'
+    jobs:
+      - job: ValidateCDCFlow
+        displayName: 'Run API Tests DataLake Flow (UAT)'
+        steps:
+          - checkout: pagopaWalletTests
+            displayName: 'Checkout walletTests repository'
+          - script: |
+              yarn global add newman
+            displayName: 'newman installation'
+          - script: |
+              newman run --ignore-redirects api-tests/uat.cdc.update.application.tests.json --environment=api-tests/uat.cdc.update.application.envs.json --env-var WALLET_TOKEN_TEST=$(WALLET_TOKEN_TEST) --reporters cli,junit,json > output.txt
+            displayName: 'Run API tests to generate events on Queue for CDC (UAT)'
+          - script: |
+              # Extract WALLET_ID from report JSON
+              WALLET_ID=$(grep -oP "WALLET_ID=\K[^\']+" output.txt)
+              
+              if [ -z "$WALLET_ID" ]; then
+                echo "Cannot extract WALLET_ID from report"
+                exit 1
+              fi
+              echo "WALLET_ID=$WALLET_ID"
+              echo "##vso[task.setvariable variable=WALLET_ID]$WALLET_ID"
+            displayName: 'Extract and export WALLET_ID from JSON report'
+          - script: |
+              wget https://archive.apache.org/dist/kafka/2.8.0/kafka_2.13-2.8.0.tgz
+              tar -xzf kafka_2.13-2.8.0.tgz
+              export PATH=$PATH:$PWD/kafka_2.13-2.8.0/bin
+              # Verify Kafka installation
+              kafka-topics.sh --version
+              sleep 4
+              # Run the Kafka consumer command
+              eventsFromKafka=$(kafka-console-consumer.sh \
+                --bootstrap-server pagopa-u-itn-observ-evh.servicebus.windows.net:9093 \
+                --topic payment-wallet-ingestion-dl \
+                --from-beginning \
+                --timeout-ms 25000 \
+                --consumer-property sasl.mechanism=PLAIN \
+                --consumer-property security.protocol=SASL_SSL \
+                --consumer-property "sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\$ConnectionString\" password=\"$(AZURE_EVENTHUB_CONNECTION_STRING)\";")
+              
+              # Filter events by walletId
+              filteredEvents=$(echo "$eventsFromKafka" | jq -c 'select(.walletId == "'$WALLET_ID'")')
+              
+              # Print the latest event from the filtered events
+              latestEvent=$(echo "$filteredEvents" | tail -n 1)
+   
+              # Extract the id from the JSON string
+              eventId=$(echo $latestEvent | jq -r '.walletId')
+              expectedDataEventId=$WALLET_ID
+
+              echo "Extracted event ID: $eventId"
+              echo "Expected event ID: $expectedDataEventId"
+
+              if [ "$eventId" == "$expectedDataEventId" ]; then
+                echo "test passed successfully"
+              else
+                echo "fail! unexpected event"
+                exit 1   
+              fi
+
+               # Extract the timestamp from the JSON string
+              timestamp=$(echo $latestEvent | jq -r '.timestamp')
+              
+              echo "Event timestamp: $timestamp"
+              
+              # Truncate the fractional part of the timestamp if it exists
+              timestamp=$(echo $timestamp | cut -d'.' -f1)
+              
+              # Get the current time and calculate the time difference
+              currentTime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+              timeDifference=$(($(date -d "$currentTime" +%s) - $(date -d "$timestamp" +%s)))
+              
+              # Check if the timestamp is less than 86400 seconds (1 day) ago
+              if [ $timeDifference -lt 86400 ]; then
+                echo "The timestamp is within the last 24 hours."
+              else
+                echo "The timestamp is older than 24 hours."
+                exit 1
+              fi
+            displayName: 'Validate message in Kafka topic'
+  # --- END Validate event in Hub (UAT) --- #
+
