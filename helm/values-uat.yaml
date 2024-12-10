@@ -2,26 +2,47 @@ microservice-chart:
   namespace: "pay-wallet"
   nameOverride: ""
   fullnameOverride: "pagopa-pay-wallet-cdc-service"
+  canaryDelivery:
+    create: false
+    ingress:
+      create: true
+      canary:
+        type: bluegreen
+        headerName: deployment
+        headerValue: blue
+    service:
+      create: true
+    deployment:
+      create: true
+      image:
+        repository: pagopauitncoreacr.azurecr.io/pagopapaymentwalletcdcservice
+        tag: "latest"
+        pullPolicy: Always
+      envConfig:
+        OTEL_SERVICE_NAME: "pagopa-payment-wallet-cdc-service-blue"
+        OTEL_RESOURCE_ATTRIBUTES: "service.name=pagopa-payment-wallet-cdc-service-blue,deployment.environment=uat"
+      envSecret: {}
   image:
-    repository: pagopaditncoreacr.azurecr.io/pagopapaymentwalletcdcservice
-    tag: "0.14.2"
+    repository: pagopauitncoreacr.azurecr.io/pagopapaymentwalletcdcservice
+    tag: "0.9.0"
     pullPolicy: Always
   livenessProbe:
     httpGet:
       path: /actuator/health/liveness
       port: 8080
-    initialDelaySeconds: 60
+    initialDelaySeconds: 40
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
     httpGet:
       path: /actuator/health/readiness
       port: 8080
-    initialDelaySeconds: 60
+    initialDelaySeconds: 40
     failureThreshold: 6
     periodSeconds: 10
   deployment:
     create: true
+    replicas: 1
   service:
     create: true
     type: ClusterIP
@@ -29,14 +50,14 @@ microservice-chart:
       - 8080
   ingress:
     create: true
-    host: "itndev.pay-wallet.internal.dev.platform.pagopa.it"
+    host: "itnuat.pay-wallet.internal.uat.platform.pagopa.it"
     path: /pagopa-payment-wallet-cdc-service/(.*)
     servicePort: 8080
   serviceAccount:
     create: false
-    annotations: { }
+    annotations: {}
     name: ""
-  podAnnotations: { }
+  podAnnotations: {}
   podSecurityContext:
     seccompProfile:
       type: RuntimeDefault
@@ -48,16 +69,17 @@ microservice-chart:
       cpu: "300m"
     limits:
       memory: "512Mi"
-      cpu: "300m"
+      cpu: "600m"
   autoscaling:
     enable: false
     minReplica: 1
-    maxReplica: 10
+    maxReplica: 1
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
     triggers:
       - type: cpu
         metadata:
+          # Required
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
   terminationGracePeriodSeconds: 30
@@ -68,19 +90,19 @@ microservice-chart:
       maxUnavailable: 0
   envConfig:
     OTEL_SERVICE_NAME: "pagopa-payment-wallet-cdc-service"
-    OTEL_SERVICE_ENVIRONMENT: "dev"
-    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=dev"
-    OTEL_EXPORTER_OTLP_ENDPOINT: "https://weudev.kibana.internal.dev.platform.pagopa.it/apm"
+    OTEL_SERVICE_ENVIRONMENT: "uat"
+    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=uat"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "https://weuuat.kibana.internal.uat.platform.pagopa.it/apm"
     OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
     OTEL_TRACES_EXPORTER: otlp
     OTEL_METRICS_EXPORTER: otlp
     OTEL_LOGS_EXPORTER: otlp
     OTEL_TRACES_SAMPLER: "always_on"
-    CDC_QUEUE_NAME: pagopa-d-itn-pay-wallet-cdc-queue
+    CDC_QUEUE_NAME: pagopa-u-itn-pay-wallet-cdc-queue
     CDC_QUEUE_TTL_SECONDS: "7200"
     CDC_QUEUE_VISIBILITY_TIMEOUT_SECONDS: "0"
-    MONGO_HOST: pagopa-d-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
-    MONGO_USERNAME: pagopa-d-itn-pay-wallet-cosmos-account
+    MONGO_HOST: pagopa-u-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
+    MONGO_USERNAME: pagopa-u-itn-pay-wallet-cosmos-account
     MONGO_PORT: "10255"
     MONGO_SSL_ENABLED: "true"
     MONGO_DB_NAME: "payment-wallet"
@@ -99,12 +121,12 @@ microservice-chart:
     CDC_SEND_RETRY_INTERVAL_IN_MS: "1000"
     CDC_STREAM_RETRY_MAX_ATTEMPTS: "15"
     CDC_STREAM_RETRY_INTERVAL_IN_MS: "60000"
-    REDIS_HOST: pagopa-d-itn-pay-wallet-redis.redis.cache.windows.net
+    REDIS_HOST: pagopa-u-itn-pay-wallet-redis.redis.cache.windows.net
     REDIS_PORT: "6380"
     REDIS_SSL_ENABLED: "true"
     CDC_REDIS_RESUME_KEYSPACE: "cdcResume"
     CDC_REDIS_RESUME_TARGET: "walletLogEvents"
-    CDC_REDIS_RESUME_FALLBACK_IN_MIN: "10"
+    CDC_REDIS_RESUME_FALLBACK_IN_MIN: "60"
     CDC_REDIS_RESUME_TTL_IN_MIN: "1440"
     CDC_RESUME_SAVE_INTERVAL: "5"
     CDC_REDIS_JOB_LOCK_KEYSPACE: "cdcEventLock"
@@ -113,16 +135,12 @@ microservice-chart:
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     MONGO_PASSWORD: mongo-wallet-password
-    REDIS_PASSWORD: redis-wallet-password
     CDC_QUEUE_CONNECTION_STRING: wallet-storage-connection-string
+    REDIS_PASSWORD: redis-wallet-password
   keyvault:
-    name: "pagopa-d-pay-wallet-kv"
+    name: "pagopa-u-pay-wallet-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
-  nodeSelector: { }
-  canaryDelivery:
-    deployment:
-      image:
-        tag: ""
+  nodeSelector: {}
   tolerations:
     - effect: "NoSchedule"
       key: "paymentWalletOnly"
@@ -144,5 +162,5 @@ microservice-chart:
             labelSelector:
               matchLabels:
                 aadpodidbinding: pay-wallet-pod-identity
-            namespaces: [ "pay-wallet" ]
+            namespaces: ["pay-wallet"]
             topologyKey: topology.kubernetes.io/zone
