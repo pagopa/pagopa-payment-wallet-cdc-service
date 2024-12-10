@@ -101,6 +101,10 @@ If you want to customize the application environment, reference this table:
 | CDC_REDIS_RESUME_FALLBACK_IN_MIN     | Fallbacks in minutes before now in case there is no resume token in cache                                                                                  | long              |         |
 | CDC_REDIS_RESUME_TTL_IN_MIN          | Time to live in minutes of Redis items                                                                                                                     | long              |         |
 | CDC_RESUME_SAVE_INTERVAL             | Interval with which the CDC saves resume token                                                                                                             | int               |         |
+| CDC_REDIS_JOB_LOCK_KEYSPACE          | Prefix used for redis key name                                                                                                                             | string            |         |
+| CDC_REDIS_JOB_LOCK_TTL_MS            | Fallbacks in milliseconds before now in case lock is not released                                                                                          | long              |         |
+| CDC_REDIS_JOB_LOCK_WAIT_TIME_MS      | Wait time in milliseconds for lock acquisition before giving up                                                                                            | long              |         |
+
 
 (*): for Mongo connection string options
 see [docs](https://www.mongodb.com/docs/drivers/java/sync/v4.3/fundamentals/connection/connection-options/#connection-options)

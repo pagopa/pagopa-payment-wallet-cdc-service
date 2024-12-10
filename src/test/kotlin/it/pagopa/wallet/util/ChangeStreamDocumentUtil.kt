@@ -1,6 +1,7 @@
 package it.pagopa.wallet.util
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument
+import java.util.UUID
 import org.bson.BsonDocument
 import org.bson.Document
 import org.springframework.data.mongodb.core.ChangeStreamEvent
@@ -42,6 +43,7 @@ class ChangeStreamDocumentUtil {
             return Document("walletId", walletId)
                 .append("_class", classT)
                 .append("timestamp", timestamp)
+                .append("_id", UUID.randomUUID().toString())
         }
     }
 }

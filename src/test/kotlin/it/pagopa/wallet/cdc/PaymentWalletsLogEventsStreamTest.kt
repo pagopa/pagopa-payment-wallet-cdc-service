@@ -4,6 +4,8 @@ import com.mongodb.MongoQueryException
 import com.mongodb.ServerAddress
 import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.properties.RetryStreamPolicyConfig
+import it.pagopa.wallet.exceptions.LockNotAcquiredException
+import it.pagopa.wallet.services.CdcLockService
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import it.pagopa.wallet.util.ChangeStreamDocumentUtil
@@ -12,6 +14,7 @@ import org.bson.BsonDocument
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.internal.verification.Times
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
@@ -25,6 +28,7 @@ import reactor.test.StepVerifier
 @TestPropertySource(locations = ["classpath:application-test.properties"])
 class PaymentWalletsLogEventsStreamTest {
     private val reactiveMongoTemplate: ReactiveMongoTemplate = mock()
+    private val cdcLockService: CdcLockService = mock()
     private val retryStreamPolicyConfig: RetryStreamPolicyConfig = RetryStreamPolicyConfig(2, 100)
     private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService =
         mock()
@@ -42,6 +46,7 @@ class PaymentWalletsLogEventsStreamTest {
                 changeStreamOptionsConfig,
                 walletPaymentCDCEventDispatcherService,
                 resumePolicyService,
+                cdcLockService,
                 retryStreamPolicyConfig,
                 1
             )
@@ -70,6 +75,8 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
+        given { cdcLockService.acquireJobLock(any()) }.willReturn(Mono.just(Unit))
+
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
@@ -78,6 +85,8 @@ class PaymentWalletsLogEventsStreamTest {
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .expectNext(expectedDocument)
             .verifyComplete()
+
+        verify(cdcLockService, Times(1)).acquireJobLock(expectedDocument.getString("_id"))
     }
 
     @Test
@@ -106,6 +115,8 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
+        given { cdcLockService.acquireJobLock(any()) }.willReturn(Mono.just(Unit))
+
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
@@ -117,6 +128,7 @@ class PaymentWalletsLogEventsStreamTest {
             .verifyComplete()
 
         verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
+        verify(cdcLockService, Times(3)).acquireJobLock(expectedDocument.getString("_id"))
     }
 
     @Test
@@ -145,6 +157,8 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
+        given { cdcLockService.acquireJobLock(any()) }.willReturn(Mono.just(Unit))
+
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
         given { resumePolicyService.saveResumeTimestamp(anyOrNull()) }
@@ -157,6 +171,7 @@ class PaymentWalletsLogEventsStreamTest {
             .verifyComplete()
 
         verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
+        verify(cdcLockService, Times(3)).acquireJobLock(expectedDocument.getString("_id"))
     }
 
     @Test
@@ -185,6 +200,8 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
+        given { cdcLockService.acquireJobLock(any()) }.willReturn(Mono.just(Unit))
+
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
@@ -198,6 +215,7 @@ class PaymentWalletsLogEventsStreamTest {
 
         verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
         verify(resumePolicyService, times(3)).saveResumeTimestamp(anyOrNull())
+        verify(cdcLockService, Times(3)).acquireJobLock(expectedDocument.getString("_id"))
     }
 
     @Test
@@ -232,6 +250,8 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
+        given { cdcLockService.acquireJobLock(any()) }.willReturn(Mono.just(Unit))
+
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
@@ -245,6 +265,7 @@ class PaymentWalletsLogEventsStreamTest {
 
         verify(walletPaymentCDCEventDispatcherService, times(3)).dispatchEvent(anyOrNull())
         verify(resumePolicyService, times(3)).saveResumeTimestamp(anyOrNull())
+        verify(cdcLockService, Times(3)).acquireJobLock(any())
     }
 
     @Test
@@ -260,6 +281,8 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
+        given { cdcLockService.acquireJobLock(any()) }.willReturn(Mono.just(Unit))
+
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
@@ -270,5 +293,45 @@ class PaymentWalletsLogEventsStreamTest {
 
         verify(reactiveMongoTemplate, times(3))
             .changeStream(anyOrNull(), anyOrNull(), eq(BsonDocument::class.java))
+        verify(cdcLockService, Times(0)).acquireJobLock(any())
+    }
+
+    @Test
+    fun `change stream does not acquire lock`() {
+        val expectedDocument =
+            ChangeStreamDocumentUtil.getDocument(
+                "testWallet",
+                "testEvent",
+                "2024-09-20T09:16:43.705881111Z"
+            )
+        val expectedChangeStreamDocument =
+            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocument, mongoConverter)
+        val bsonDocumentFlux = Flux.just(expectedChangeStreamDocument)
+
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willReturn(bsonDocumentFlux)
+
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+
+        given { cdcLockService.acquireJobLock(any()) }
+            .willThrow(LockNotAcquiredException("Test error"))
+
+        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+
+        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
+            .willReturn(Mono.just(expectedDocument))
+
+        StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
+            .verifyComplete()
+
+        verify(cdcLockService, Times(1)).acquireJobLock(expectedDocument.getString("_id"))
+        verify(walletPaymentCDCEventDispatcherService, Times(0)).dispatchEvent(any())
+        verify(resumePolicyService, Times(0)).saveResumeTimestamp(any())
     }
 }
