@@ -8,5 +8,5 @@ data class RedisJobLockPolicyConfig(
     val ttlInMs: Long,
     val waitTimeInMs: Long
 ) {
-    fun getLockNameByJob(eventId: String): String = "%s:%s:%s".format(keyspace, "lock", eventId)
+    fun getLockNameByEventId(eventId: String): String = "%s:%s:%s".format(keyspace, "lock", eventId)
 }

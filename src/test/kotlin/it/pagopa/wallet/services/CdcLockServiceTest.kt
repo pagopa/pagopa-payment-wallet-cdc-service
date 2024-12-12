@@ -29,7 +29,7 @@ class CdcLockServiceTest {
         given(rLockReactive.tryLock(any(), any(), any())).willReturn(mono { true })
 
         // Test
-        cdcLockService.acquireJobLock(eventId).test().expectNext(Unit).verifyComplete()
+        cdcLockService.acquireEventLock(eventId).test().expectNext(Unit).verifyComplete()
 
         // verifications
         verify(redissonClient, times(1)).getLock("lockkeyspace:lock:$eventId")
@@ -45,7 +45,7 @@ class CdcLockServiceTest {
 
         // Test
         cdcLockService
-            .acquireJobLock(eventId)
+            .acquireEventLock(eventId)
             .test()
             .expectError(LockNotAcquiredException::class.java)
             .verify()
