@@ -17,10 +17,10 @@ class CdcLockService(
 ) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-    fun acquireJobLock(eventId: String): Mono<Unit> {
+    fun acquireEventLock(eventId: String): Mono<Unit> {
         logger.debug("Trying to acquire lock for event: {}", eventId)
         return redissonClient
-            .getLock(redisJobLockPolicyConfig.getLockNameByJob(eventId))
+            .getLock(redisJobLockPolicyConfig.getLockNameByEventId(eventId))
             .tryLock(
                 redisJobLockPolicyConfig.waitTimeInMs,
                 redisJobLockPolicyConfig.ttlInMs,

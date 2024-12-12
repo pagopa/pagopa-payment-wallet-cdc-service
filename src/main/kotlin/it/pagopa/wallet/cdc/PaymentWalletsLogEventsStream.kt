@@ -91,7 +91,7 @@ class PaymentWalletsLogEventsStream(
 
     private fun processEvent(event: Document?): Mono<Document> {
         return Mono.defer {
-                cdcLockService.acquireJobLock(event?.getString("_id").toString()).flatMap {
+                cdcLockService.acquireEventLock(event?.getString("_id").toString()).flatMap {
                     walletPaymentCDCEventDispatcherService.dispatchEvent(event)
                 }
             }
