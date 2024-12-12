@@ -42,7 +42,7 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 1
+    replicas: 3
   service:
     create: true
     type: ClusterIP
@@ -72,8 +72,8 @@ microservice-chart:
       cpu: "600m"
   autoscaling:
     enable: false
-    minReplica: 1
-    maxReplica: 1
+    minReplica: 3
+    maxReplica: 3
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
     triggers:
@@ -98,7 +98,7 @@ microservice-chart:
     OTEL_METRICS_EXPORTER: otlp
     OTEL_LOGS_EXPORTER: otlp
     OTEL_TRACES_SAMPLER: "always_on"
-    CDC_QUEUE_NAME: pagopa-u-itn-pay-wallet-cdc-queue
+    CDC_QUEUE_NAME: pagopa-u-itn-pay-wallet-cdc-queue-b
     CDC_QUEUE_TTL_SECONDS: "7200"
     CDC_QUEUE_VISIBILITY_TIMEOUT_SECONDS: "0"
     MONGO_HOST: pagopa-u-itn-pay-wallet-cosmos-account.mongo.cosmos.azure.com
