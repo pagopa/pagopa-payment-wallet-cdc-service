@@ -12,6 +12,7 @@ import reactor.core.publisher.Hooks
     ChangeStreamOptionsConfig::class,
     RetrySendPolicyConfig::class,
     RedisResumePolicyConfig::class,
+    RedisJobLockPolicyConfig::class,
     RetryStreamPolicyConfig::class
 )
 class PagopaPaymentWalletCdcServiceApplication
