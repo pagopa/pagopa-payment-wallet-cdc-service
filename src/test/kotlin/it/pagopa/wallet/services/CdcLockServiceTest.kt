@@ -8,7 +8,6 @@ import kotlinx.coroutines.reactor.mono
 import org.mockito.kotlin.*
 import org.redisson.api.RLockReactive
 import org.redisson.api.RedissonReactiveClient
-import reactor.core.publisher.Mono
 import reactor.kotlin.test.test
 
 class CdcLockServiceTest {
@@ -29,7 +28,7 @@ class CdcLockServiceTest {
         given(rLockReactive.tryLock(any(), any(), any())).willReturn(mono { true })
 
         // Test
-        cdcLockService.acquireEventLock(eventId).test().expectNext(Unit).verifyComplete()
+        cdcLockService.acquireEventLock(eventId).test().expectNext(true).verifyComplete()
 
         // verifications
         verify(redissonClient, times(1)).getLock("lockkeyspace:lock:$eventId")
@@ -37,11 +36,12 @@ class CdcLockServiceTest {
     }
 
     @Test
-    fun `Should throw LockNotAcquiredException when lock is already acquired`() {
+    fun `Should throw LockNotAcquiredException when tryLock throw exception`() {
         // pre-requisites
         val eventId = "eventId"
         given(redissonClient.getLock(any<String>())).willReturn(rLockReactive)
-        given(rLockReactive.tryLock(any(), any(), any())).willReturn(Mono.just(false))
+        given(rLockReactive.tryLock(any(), any(), any()))
+            .willThrow(RuntimeException("Test exception"))
 
         // Test
         cdcLockService
@@ -53,5 +53,22 @@ class CdcLockServiceTest {
         // verifications
         verify(redissonClient, times(1)).getLock("lockkeyspace:lock:$eventId")
         verify(rLockReactive, times(1)).tryLock(2, 20, TimeUnit.MILLISECONDS)
+    }
+
+    @Test
+    fun `Should throw LockNotAcquiredException when getLock throw exception`() {
+        // pre-requisites
+        val eventId = "eventId"
+        given(redissonClient.getLock(any<String>())).willThrow(RuntimeException("Test exception"))
+
+        // Test
+        cdcLockService
+            .acquireEventLock(eventId)
+            .test()
+            .expectError(LockNotAcquiredException::class.java)
+            .verify()
+
+        // verifications
+        verify(redissonClient, times(1)).getLock("lockkeyspace:lock:$eventId")
     }
 }

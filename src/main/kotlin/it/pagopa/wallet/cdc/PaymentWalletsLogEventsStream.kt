@@ -91,9 +91,10 @@ class PaymentWalletsLogEventsStream(
 
     private fun processEvent(event: Document?): Mono<Document> {
         return Mono.defer {
-                cdcLockService.acquireEventLock(event?.getString("_id").toString()).flatMap {
-                    walletPaymentCDCEventDispatcherService.dispatchEvent(event)
-                }
+                cdcLockService
+                    .acquireEventLock(event?.getString("_id").toString())
+                    .filter { it == true }
+                    .flatMap { walletPaymentCDCEventDispatcherService.dispatchEvent(event) }
             }
             .onErrorResume {
                 logger.error("Error during event handling : ", it)

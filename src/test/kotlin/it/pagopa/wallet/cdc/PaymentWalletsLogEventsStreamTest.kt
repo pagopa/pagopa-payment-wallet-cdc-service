@@ -75,7 +75,7 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
-        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(Unit))
+        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
@@ -115,7 +115,7 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
-        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(Unit))
+        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
@@ -157,7 +157,7 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
-        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(Unit))
+        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
@@ -200,7 +200,7 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
-        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(Unit))
+        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
@@ -250,7 +250,7 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
-        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(Unit))
+        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
@@ -281,7 +281,7 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
 
-        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(Unit))
+        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 
@@ -297,7 +297,7 @@ class PaymentWalletsLogEventsStreamTest {
     }
 
     @Test
-    fun `change stream does not acquire lock`() {
+    fun `change stream does not acquire lock case error`() {
         val expectedDocument =
             ChangeStreamDocumentUtil.getDocument(
                 "testWallet",
@@ -321,6 +321,44 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { cdcLockService.acquireEventLock(any()) }
             .willThrow(LockNotAcquiredException("Test error"))
+
+        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+
+        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
+            .willReturn(Mono.just(expectedDocument))
+
+        StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
+            .verifyComplete()
+
+        verify(cdcLockService, Times(1)).acquireEventLock(expectedDocument.getString("_id"))
+        verify(walletPaymentCDCEventDispatcherService, Times(0)).dispatchEvent(any())
+        verify(resumePolicyService, Times(0)).saveResumeTimestamp(any())
+    }
+
+    @Test
+    fun `change stream does not acquire lock case false`() {
+        val expectedDocument =
+            ChangeStreamDocumentUtil.getDocument(
+                "testWallet",
+                "testEvent",
+                "2024-09-20T09:16:43.705881111Z"
+            )
+        val expectedChangeStreamDocument =
+            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocument, mongoConverter)
+        val bsonDocumentFlux = Flux.just(expectedChangeStreamDocument)
+
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willReturn(bsonDocumentFlux)
+
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+
+        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(false))
 
         doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
 

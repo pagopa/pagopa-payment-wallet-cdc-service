@@ -17,22 +17,17 @@ class CdcLockService(
 ) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-    fun acquireEventLock(eventId: String): Mono<Unit> {
+    fun acquireEventLock(eventId: String): Mono<Boolean> {
         logger.debug("Trying to acquire lock for event: {}", eventId)
-        return redissonClient
-            .getLock(redisJobLockPolicyConfig.getLockNameByEventId(eventId))
-            .tryLock(
-                redisJobLockPolicyConfig.waitTimeInMs,
-                redisJobLockPolicyConfig.ttlInMs,
-                TimeUnit.MILLISECONDS
-            )
-            .filter { it == true } // only lock acquired
-            .doOnNext { logger.debug("Lock acquired for event: {}", eventId) }
-            .onErrorMap {
-                logger.error("Lock acquiring error for event: {}", eventId, it)
-                LockNotAcquiredException(eventId, it)
+        return Mono.defer {
+                redissonClient
+                    .getLock(redisJobLockPolicyConfig.getLockNameByEventId(eventId))
+                    .tryLock(
+                        redisJobLockPolicyConfig.waitTimeInMs,
+                        redisJobLockPolicyConfig.ttlInMs,
+                        TimeUnit.MILLISECONDS
+                    )
             }
-            .switchIfEmpty(Mono.error(LockNotAcquiredException(eventId)))
-            .thenReturn(Unit)
+            .onErrorMap { LockNotAcquiredException(eventId, it) }
     }
 }
