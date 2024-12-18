@@ -3,6 +3,7 @@ package it.pagopa.wallet.cdc
 import com.mongodb.MongoException
 import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.properties.RetryStreamPolicyConfig
+import it.pagopa.wallet.services.CdcLockService
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import java.time.Duration
@@ -30,6 +31,7 @@ class PaymentWalletsLogEventsStream(
     @Autowired
     private val walletPaymentCDCEventDispatcherService: WalletPaymentCDCEventDispatcherService,
     @Autowired private val redisResumePolicyService: ResumePolicyService,
+    @Autowired private val cdcLockService: CdcLockService,
     @Autowired private val retryStreamPolicyConfig: RetryStreamPolicyConfig,
     @Value("\${cdc.resume.saveInterval}") private val saveInterval: Int
 ) : ApplicationListener<ApplicationReadyEvent> {
@@ -88,7 +90,12 @@ class PaymentWalletsLogEventsStream(
     }
 
     private fun processEvent(event: Document?): Mono<Document> {
-        return Mono.defer { walletPaymentCDCEventDispatcherService.dispatchEvent(event) }
+        return Mono.defer {
+                cdcLockService
+                    .acquireEventLock(event?.getString("_id").toString())
+                    .filter { it == true }
+                    .flatMap { walletPaymentCDCEventDispatcherService.dispatchEvent(event) }
+            }
             .onErrorResume {
                 logger.error("Error during event handling : ", it)
                 Mono.empty()

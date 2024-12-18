@@ -84,6 +84,12 @@ If you want to customize the application environment, reference this table:
 | REDIS_PASSWORD                       | Redis password                                                                                                                                             | string            |         |
 | REDIS_PORT                           | Redis port                                                                                                                                                 | string            |         |
 | REDIS_SSL_ENABLED                    | Whether SSL is enabled while connecting to  Redis                                                                                                          | string            |         |
+| REDIS_SUB_CONN_MIN                   | Redis subscription minimum connection number                                                                                                               | long              |         |
+| REDIS_SUB_CONN_MAX                   | Redis subscription maximum connection number                                                                                                               | long              |         |
+| REDIS_SLAVE_CONN_MIN                 | Redis slave minimum connection number                                                                                                                      | long              |         |
+| REDIS_SLAVE_CONN_MAX                 | Redis slave maximum connection number                                                                                                                      | long              |         |
+| REDIS_MASTER_CONN_MIN                | Redis master minimum connection number                                                                                                                     | long              |         |
+| REDIS_MASTER_CONN_MAX                | Redis master maximum connection number                                                                                                                     | long              |         |
 | WALLET_SESSION_TTL_SECONDS           | Wallet session TTL in seconds                                                                                                                              | int               |         |
 | CDC_QUEUE_NAME                       | Name of expiration queue                                                                                                                                   | string            |         |
 | CDC_QUEUE_TTL_SECONDS                | TTL in seconds for published message                                                                                                                       | string            |         |
@@ -101,6 +107,10 @@ If you want to customize the application environment, reference this table:
 | CDC_REDIS_RESUME_FALLBACK_IN_MIN     | Fallbacks in minutes before now in case there is no resume token in cache                                                                                  | long              |         |
 | CDC_REDIS_RESUME_TTL_IN_MIN          | Time to live in minutes of Redis items                                                                                                                     | long              |         |
 | CDC_RESUME_SAVE_INTERVAL             | Interval with which the CDC saves resume token                                                                                                             | int               |         |
+| CDC_REDIS_JOB_LOCK_KEYSPACE          | Prefix used for redis key name                                                                                                                             | string            |         |
+| CDC_REDIS_JOB_LOCK_TTL_MS            | Fallbacks in milliseconds before now in case lock is not released                                                                                          | long              |         |
+| CDC_REDIS_JOB_LOCK_WAIT_TIME_MS      | Wait time in milliseconds for lock acquisition before giving up                                                                                            | long              |         |
+
 
 (*): for Mongo connection string options
 see [docs](https://www.mongodb.com/docs/drivers/java/sync/v4.3/fundamentals/connection/connection-options/#connection-options)

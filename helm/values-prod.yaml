@@ -124,11 +124,20 @@ microservice-chart:
     REDIS_HOST: pagopa-p-itn-pay-wallet-redis.redis.cache.windows.net
     REDIS_PORT: "6380"
     REDIS_SSL_ENABLED: "true"
+    REDIS_SUB_CONN_MIN: "4"
+    REDIS_SUB_CONN_MAX: "36"
+    REDIS_SLAVE_CONN_MIN: "4"
+    REDIS_SLAVE_CONN_MAX: "36"
+    REDIS_MASTER_CONN_MIN: "4"
+    REDIS_MASTER_CONN_MAX: "36"
     CDC_REDIS_RESUME_KEYSPACE: "cdcResume"
     CDC_REDIS_RESUME_TARGET: "walletLogEvents"
     CDC_REDIS_RESUME_FALLBACK_IN_MIN: "60"
     CDC_REDIS_RESUME_TTL_IN_MIN: "4320" #3 days
     CDC_RESUME_SAVE_INTERVAL: "5"
+    CDC_REDIS_JOB_LOCK_KEYSPACE: "cdcEventLock"
+    CDC_REDIS_JOB_LOCK_TTL_MS: "600000"
+    CDC_REDIS_JOB_LOCK_WAIT_TIME_MS: "100"
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     MONGO_PASSWORD: mongo-wallet-password
