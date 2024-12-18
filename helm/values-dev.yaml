@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-pay-wallet-cdc-service"
   image:
     repository: pagopaditncoreacr.azurecr.io/pagopapaymentwalletcdcservice
-    tag: "0.9.0"
+    tag: "0.10.0"
     pullPolicy: Always
   livenessProbe:
     httpGet:
