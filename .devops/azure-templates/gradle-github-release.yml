@@ -141,7 +141,7 @@ steps:
     displayName: 'Set release variables'
 
   # create new release
-  - task: GitHubRelease@0
+  - task: GitHubRelease@1
     inputs:
       gitHubConnection: ${{ parameters.gitHubConnection }}
       repositoryName: $(Build.Repository.Name)
