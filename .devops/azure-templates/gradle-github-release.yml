@@ -147,7 +147,7 @@ steps:
       repositoryName: $(Build.Repository.Name)
       action: create
       target: $(sha)
-      tagSource: manual
+      tagSource: userSpecifiedTag
       tag: $(tag)
       title: $(title)
       addChangelog: true
