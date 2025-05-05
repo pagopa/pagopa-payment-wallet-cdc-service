@@ -17,10 +17,10 @@ microservice-chart:
     envConfig:
       OTEL_SERVICE_NAME: "pagopa-payment-wallet-cdc-service-blue"
       OTEL_RESOURCE_ATTRIBUTES: "service.name=pagopa-payment-wallet-cdc-service-blue,deployment.environment=prod"
-    envSecret: { }
+    envSecret: {}
   image:
     repository: pagopapitncoreacr.azurecr.io/pagopapaymentwalletcdcservice
-    tag: "0.11.0"
+    tag: "0.11.1"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -51,9 +51,9 @@ microservice-chart:
     servicePort: 8080
   serviceAccount:
     create: false
-    annotations: { }
+    annotations: {}
     name: "pay-wallet-workload-identity"
-  podAnnotations: { }
+  podAnnotations: {}
   podSecurityContext:
     seccompProfile:
       type: RuntimeDefault
@@ -142,7 +142,7 @@ microservice-chart:
   keyvault:
     name: "pagopa-p-pay-wallet-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
-  nodeSelector: { }
+  nodeSelector: {}
   tolerations:
     - effect: "NoSchedule"
       key: "paymentWalletOnly"
@@ -164,7 +164,7 @@ microservice-chart:
             labelSelector:
               matchLabels:
                 app.kubernetes.io/instance: pagopapaymentwalletcdcservice
-            namespaces: [ "pay-wallet" ]
+            namespaces: ["pay-wallet"]
             topologyKey: topology.kubernetes.io/zone
   azure:
     workloadIdentityClientId: 48a74dad-26f3-4916-ba45-ddda27d950b1
