@@ -68,6 +68,7 @@ dependencies {
 
   // azure storage queue
   implementation("com.azure.spring:spring-cloud-azure-starter")
+  implementation("com.azure:azure-identity")
   implementation("com.azure:azure-storage-queue")
   implementation("com.azure:azure-core-serializer-json-jackson")
 
