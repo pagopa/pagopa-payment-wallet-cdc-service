@@ -5,11 +5,11 @@ version = "0.11.2"
 description = "pagopa-payment-wallet-cdc-service"
 
 plugins {
-  kotlin("jvm") version "1.9.25"
-  kotlin("plugin.spring") version "1.9.25"
-  id("org.springframework.boot") version "3.3.4"
+  kotlin("jvm") version "2.2.0"
+  kotlin("plugin.spring") version "2.2.0"
+  id("org.springframework.boot") version "3.4.5"
   id("io.spring.dependency-management") version "1.1.6"
-  id("com.diffplug.spotless") version "6.18.0"
+  id("com.diffplug.spotless") version "6.25.0"
   id("org.sonarqube") version "4.0.0.2929"
   id("com.dipien.semantic-version") version "2.0.0" apply false
   jacoco
@@ -33,11 +33,11 @@ configurations { compileOnly { extendsFrom(configurations.annotationProcessor.ge
 dependencyLocking { lockAllConfigurations() }
 
 dependencyManagement {
-  imports { mavenBom("org.springframework.boot:spring-boot-dependencies:3.3.4") }
-  imports { mavenBom("com.azure.spring:spring-cloud-azure-dependencies:5.13.0") }
+  imports { mavenBom("org.springframework.boot:spring-boot-dependencies:3.4.5") }
+  imports { mavenBom("com.azure.spring:spring-cloud-azure-dependencies:5.22.0") }
   // Kotlin BOM
-  imports { mavenBom("org.jetbrains.kotlin:kotlin-bom:1.7.22") }
-  imports { mavenBom("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.4") }
+  imports { mavenBom("org.jetbrains.kotlin:kotlin-bom:2.2.0") }
+  imports { mavenBom("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.10.1") }
 }
 
 dependencies {
@@ -68,6 +68,7 @@ dependencies {
 
   // azure storage queue
   implementation("com.azure.spring:spring-cloud-azure-starter")
+  implementation("com.azure:azure-identity")
   implementation("com.azure:azure-storage-queue")
   implementation("com.azure:azure-core-serializer-json-jackson")
 
