@@ -110,7 +110,6 @@ microservice-chart:
     MONGO_SERVER_SELECTION_TIMEOUT_MS: "2000"
     MONGO_WAITING_QUEUE_MS: "2000"
     MONGO_HEARTBEAT_FREQUENCY_MS: "5000"
-    MONGO_REPLICA_SET_OPTION: "&replicaSet=globaldb"
     CDC_LOG_EVENTS_COLLECTION_NAME: "payment-wallets-log-events"
     CDC_LOG_EVENTS_OPERATION_TYPE: "insert,update,replace"
     CDC_LOG_EVENTS_PROJECT: "fullDocument"
