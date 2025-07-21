@@ -2,8 +2,8 @@ apiVersion: v2
 name: cdc-wallet
 description: Microservice that implements the change data capture on wallet database
 type: application
-version: 1.13.0
-appVersion: 0.12.0
+version: 1.13.1
+appVersion: 0.12.1
 dependencies:
   - name: microservice-chart
     version: 7.5.0
