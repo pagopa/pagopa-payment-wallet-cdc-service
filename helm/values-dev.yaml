@@ -115,7 +115,7 @@ microservice-chart:
     CDC_SEND_RETRY_INTERVAL_IN_MS: "1000"
     CDC_STREAM_RETRY_MAX_ATTEMPTS: "15"
     CDC_STREAM_RETRY_INTERVAL_IN_MS: "60000"
-    REDIS_HOST: pagopa-d-itn-pay-wallet-redis.redis.cache.windows.net
+    REDIS_HOST: pagopa-d-itn-pay-wallet-redis-std.redis.cache.windows.net
     REDIS_PORT: "6380"
     REDIS_SSL_ENABLED: "true"
     REDIS_SUB_CONN_MIN: "1"
@@ -135,7 +135,7 @@ microservice-chart:
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     MONGO_PASSWORD: mongo-wallet-password
-    REDIS_PASSWORD: redis-wallet-password
+    REDIS_PASSWORD: redis-std-wallet-password
     CDC_QUEUE_CONNECTION_STRING: wallet-storage-connection-string
   keyvault:
     name: "pagopa-d-pay-wallet-kv"
