@@ -44,23 +44,26 @@ class PaymentWalletsLogEventsStream(
     fun streamPaymentWalletsLogEvents(): Flux<Document> {
         val flux: Flux<Document> =
             Flux.defer {
-                    reactiveMongoTemplate
-                        .changeStream(
-                            changeStreamOptionsConfig.collection,
-                            ChangeStreamOptions.builder()
-                                .filter(
-                                    Aggregation.newAggregation(
-                                        Aggregation.match(
-                                            Criteria.where("operationType")
-                                                .`in`(changeStreamOptionsConfig.operationType)
-                                        ),
-                                        Aggregation.project(changeStreamOptionsConfig.project)
+                    redisResumePolicyService
+                        .getResumeTimestamp()
+                        .flatMapMany { resumeInstant ->
+                            reactiveMongoTemplate.changeStream(
+                                changeStreamOptionsConfig.collection,
+                                ChangeStreamOptions.builder()
+                                    .filter(
+                                        Aggregation.newAggregation(
+                                            Aggregation.match(
+                                                Criteria.where("operationType")
+                                                    .`in`(changeStreamOptionsConfig.operationType)
+                                            ),
+                                            Aggregation.project(changeStreamOptionsConfig.project)
+                                        )
                                     )
-                                )
-                                .resumeAt(redisResumePolicyService.getResumeTimestamp())
-                                .build(),
-                            BsonDocument::class.java
-                        )
+                                    .resumeAt(resumeInstant)
+                                    .build(),
+                                BsonDocument::class.java
+                            )
+                        }
                         // Process the elements of the Flux
                         .flatMap { processEvent(it.raw?.fullDocument) }
                         // Save resume token every n emitted elements
@@ -113,9 +116,10 @@ class PaymentWalletsLogEventsStream(
                         if (!documentTimestamp.isNullOrBlank()) Instant.parse(documentTimestamp)
                         else Instant.now()
 
-                    redisResumePolicyService.saveResumeTimestamp(resumeTimestamp)
-                }
-                Mono.just(changeEventDocument)
+                    redisResumePolicyService
+                        .saveResumeTimestamp(resumeTimestamp)
+                        .thenReturn(changeEventDocument)
+                } else Mono.just(changeEventDocument)
             }
             .onErrorResume {
                 logger.error("Error saving resume policy: ", it)
