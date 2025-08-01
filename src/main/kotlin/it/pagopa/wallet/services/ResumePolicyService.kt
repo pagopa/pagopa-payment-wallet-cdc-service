@@ -1,7 +1,7 @@
 package it.pagopa.wallet.services
 
-import reactor.core.publisher.Mono
 import java.time.Instant
+import reactor.core.publisher.Mono
 
 interface ResumePolicyService {
     fun getResumeTimestamp(): Mono<Instant>
