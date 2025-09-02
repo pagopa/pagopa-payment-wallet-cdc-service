@@ -73,11 +73,11 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
-        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
 
         given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
-        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+        given { resumePolicyService.saveResumeTimestamp(anyOrNull()) }.willReturn(Mono.just(true))
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
             .willReturn(Mono.just(expectedDocument))
@@ -117,9 +117,9 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
-        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
 
-        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+        given { resumePolicyService.saveResumeTimestamp(anyOrNull()) }.willReturn(Mono.just(true))
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
             .willThrow(IllegalArgumentException::class)
@@ -159,7 +159,7 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
-        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
 
         given { resumePolicyService.saveResumeTimestamp(anyOrNull()) }
             .willThrow(IllegalArgumentException::class)
@@ -202,9 +202,9 @@ class PaymentWalletsLogEventsStreamTest {
 
         given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
-        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
 
-        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+        given { resumePolicyService.saveResumeTimestamp(anyOrNull()) }.willReturn(Mono.just(true))
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
             .willReturn(Mono.just(expectedDocument))
@@ -248,11 +248,11 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
-        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
 
         given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
 
-        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+        given { resumePolicyService.saveResumeTimestamp(anyOrNull()) }.willReturn(Mono.just(true))
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
             .willReturn(Mono.just(expectedDocumentNull))
@@ -279,11 +279,9 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willThrow(MongoQueryException(BsonDocument(), ServerAddress()))
 
-        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
 
-        given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(true))
-
-        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
+        given { resumePolicyService.saveResumeTimestamp(anyOrNull()) }.willReturn(Mono.just(true))
 
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
             .willThrow(IllegalArgumentException::class)
@@ -317,15 +315,10 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
-        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
 
         given { cdcLockService.acquireEventLock(any()) }
             .willThrow(LockNotAcquiredException("Test error"))
-
-        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
-
-        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
-            .willReturn(Mono.just(expectedDocument))
 
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .verifyComplete()
@@ -356,14 +349,9 @@ class PaymentWalletsLogEventsStreamTest {
             }
             .willReturn(bsonDocumentFlux)
 
-        given { resumePolicyService.getResumeTimestamp() }.willReturn(Instant.now())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
 
         given { cdcLockService.acquireEventLock(any()) }.willReturn(Mono.just(false))
-
-        doNothing().`when`(resumePolicyService).saveResumeTimestamp(anyOrNull())
-
-        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
-            .willReturn(Mono.just(expectedDocument))
 
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .verifyComplete()
