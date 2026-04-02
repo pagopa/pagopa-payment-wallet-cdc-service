@@ -1,5 +1,8 @@
 # PagoPA Payment Wallet CDC Service
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pagopa_pagopa-payment-wallet-cdc-service&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=pagopa_pagopa-payment-wallet-cdc-service)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=pagopa_pagopa-payment-wallet-cdc-service&metric=coverage)](https://sonarcloud.io/summary/new_code?id=pagopa_pagopa-payment-wallet-cdc-service)
+
 This repository is designed to manage and process events related to changes in wallet status within the PagoPA payment wallet ecosystem. This service listens to events that signal changes (such as wallet creation, modification, or deletion) and ensures that these updates are appropriately handled in a (near) real-time manner.
 
 - [PagoPA Wallet CDC Service](#pagopa-payment-wallet-cdc-service)

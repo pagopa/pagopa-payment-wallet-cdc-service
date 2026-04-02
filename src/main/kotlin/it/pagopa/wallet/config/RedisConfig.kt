@@ -6,30 +6,34 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import java.time.Instant
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.data.redis.connection.RedisConnectionFactory
-import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory
+import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer
+import org.springframework.data.redis.serializer.RedisSerializationContext
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 @Configuration
 class RedisConfig {
 
     @Bean
-    fun redisTemplate(
-        redisConnectionFactory: RedisConnectionFactory
-    ): RedisTemplate<String, Instant> {
-        val redisTemplate: RedisTemplate<String, Instant> = RedisTemplate()
-        val mapper = ObjectMapper()
-        mapper.registerModule(JavaTimeModule())
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        val jacksonRedisSerializer: Jackson2JsonRedisSerializer<Instant> =
+    fun reactiveRedisTemplate(
+        reactiveRedisConnectionFactory: ReactiveRedisConnectionFactory
+    ): ReactiveRedisTemplate<String, Instant> {
+        val mapper =
+            ObjectMapper().apply {
+                registerModule(JavaTimeModule())
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            }
+
+        val keySerializer = StringRedisSerializer()
+        val valueSerializer: Jackson2JsonRedisSerializer<Instant> =
             Jackson2JsonRedisSerializer(mapper, Instant::class.java)
 
-        redisTemplate.connectionFactory = redisConnectionFactory
-        redisTemplate.keySerializer = StringRedisSerializer()
-        redisTemplate.valueSerializer = jacksonRedisSerializer
-        redisTemplate.afterPropertiesSet()
+        val serializationContext =
+            RedisSerializationContext.newSerializationContext<String, Instant>(keySerializer)
+                .value(valueSerializer)
+                .build()
 
-        return redisTemplate
+        return ReactiveRedisTemplate(reactiveRedisConnectionFactory, serializationContext)
     }
 }

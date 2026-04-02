@@ -7,6 +7,8 @@ import java.time.temporal.ChronoUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.switchIfEmpty
 
 @Service
 class RedisResumePolicyService(
@@ -15,24 +17,26 @@ class RedisResumePolicyService(
 ) : ResumePolicyService {
     private val logger = LoggerFactory.getLogger(RedisResumePolicyService::class.java)
 
-    override fun getResumeTimestamp(): Instant {
+    override fun getResumeTimestamp(): Mono<Instant> {
         return redisTemplate
             .findByKeyspaceAndTarget(
                 redisResumePolicyConfig.keyspace,
                 redisResumePolicyConfig.target
             )
-            .orElseGet {
+            .switchIfEmpty {
                 logger.warn(
                     "Resume timestamp not found on Redis, fallback on Instant.now()-{} minutes",
                     redisResumePolicyConfig.fallbackInMin
                 )
-                Instant.now().minus(redisResumePolicyConfig.fallbackInMin, ChronoUnit.MINUTES)
+                Mono.just(
+                    Instant.now().minus(redisResumePolicyConfig.fallbackInMin, ChronoUnit.MINUTES)
+                )
             }
     }
 
-    override fun saveResumeTimestamp(timestamp: Instant) {
+    override fun saveResumeTimestamp(timestamp: Instant): Mono<Boolean> {
         logger.debug("Saving instant: {}", timestamp.toString())
-        redisTemplate.save(
+        return redisTemplate.save(
             redisResumePolicyConfig.keyspace,
             redisResumePolicyConfig.target,
             timestamp,
