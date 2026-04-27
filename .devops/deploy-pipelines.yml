@@ -155,8 +155,8 @@ stages:
                 --timeout-ms 25000 \
                 --consumer-property sasl.mechanism=PLAIN \
                 --consumer-property security.protocol=SASL_SSL \
-                --consumer-property "sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\$ConnectionString\" password=\"$(AZURE_EVENTHUB_CONNECTION_STRING)\";")
-              
+                --consumer-property sasl.jaas.config='org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="'"${AZURE_EVENTHUB_CONNECTION_STRING}"'";')
+                          
               # Filter events by walletId
               filteredEvents=$(echo "$eventsFromKafka" | jq -c 'select(.walletId == "'$WALLET_ID'")')
               
