@@ -141,6 +141,12 @@ stages:
               echo "##vso[task.setvariable variable=WALLET_ID]$WALLET_ID"
             displayName: 'Extract and export WALLET_ID from JSON report'
           - script: |
+              
+              if [ -z "$AZURE_EVENTHUB_CONNECTION_STRING" ]; then
+                echo "ERRORE: AZURE_EVENTHUB_CONNECTION_STRING non è definita!"
+                exit 1
+              fi
+              
               wget https://archive.apache.org/dist/kafka/2.8.0/kafka_2.13-2.8.0.tgz
               tar -xzf kafka_2.13-2.8.0.tgz
               export PATH=$PATH:$PWD/kafka_2.13-2.8.0/bin
@@ -156,7 +162,7 @@ stages:
                 --consumer-property sasl.mechanism=PLAIN \
                 --consumer-property security.protocol=SASL_SSL \
                 --consumer-property sasl.jaas.config='org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="'"${AZURE_EVENTHUB_CONNECTION_STRING}"'";')
-                          
+              
               # Filter events by walletId
               filteredEvents=$(echo "$eventsFromKafka" | jq -c 'select(.walletId == "'$WALLET_ID'")')
               
