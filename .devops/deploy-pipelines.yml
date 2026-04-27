@@ -59,7 +59,7 @@ stages:
   # --- START Deploy UAT --- #
   - stage: "Build_release_candidate"
     displayName: 'Build release candidate'
-    dependsOn: [ ]
+    dependsOn: []
     jobs:
       - job: "build"
         displayName: 'Build release candidate docker image'
@@ -75,7 +75,7 @@ stages:
 
   - stage: "Deploy_UAT_Green"
     displayName: 'UAT green deployment'
-    dependsOn: []
+    dependsOn: [Build_release_candidate]
     variables:
       app_version: test
     jobs:
