@@ -67,7 +67,7 @@ resources:
       endpoint: 'io-azure-devops-github-ro'
 
 pool:
-  vmImage: ubuntu-22_04
+  vmImage: ubuntu-latest
 
 stages:
   - stage: 'Build_for_DEV'
@@ -292,7 +292,7 @@ stages:
     displayName: "UAT Testing Generate Wallet Event"
     dependsOn: [ Deploy_UAT_Green]
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: 'ubuntu-22.04'
     jobs:
       - job: ValidateCDCFlow
         displayName: 'Run API Tests DataLake Flow (UAT)'
