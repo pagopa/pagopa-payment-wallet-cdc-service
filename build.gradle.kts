@@ -23,7 +23,7 @@ repositories {
 
 object Dependencies {
   const val ecsLoggingVersion = "1.5.0"
-  const val openTelemetryVersion = "1.60.1"
+  const val openTelemetryVersion = "1.62.0"
 }
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
