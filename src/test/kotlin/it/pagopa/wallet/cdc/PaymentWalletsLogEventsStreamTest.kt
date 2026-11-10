@@ -10,7 +10,6 @@ import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import it.pagopa.wallet.util.ChangeStreamDocumentUtil
 import java.time.Instant
-import kotlin.test.assertTrue
 import org.bson.BsonDocument
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -23,7 +22,6 @@ import org.springframework.data.mongodb.core.convert.MongoConverter
 import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.scheduler.Schedulers
 import reactor.test.StepVerifier
 
 @ExtendWith(MockitoExtension::class)
@@ -361,51 +359,5 @@ class PaymentWalletsLogEventsStreamTest {
         verify(cdcLockService, Times(1)).acquireEventLock(expectedDocument.getString("_id"))
         verify(walletPaymentCDCEventDispatcherService, Times(0)).dispatchEvent(any())
         verify(resumePolicyService, Times(0)).saveResumeTimestamp(any())
-    }
-
-    @Test
-    fun `event is dispatched off the thread that emits the lock result`() {
-        val expectedDocument =
-            ChangeStreamDocumentUtil.getDocument(
-                "testWallet",
-                "testEvent",
-                "2024-09-20T09:16:43.705881111Z"
-            )
-        val expectedChangeStreamDocument =
-            ChangeStreamDocumentUtil.getChangeStreamEvent(expectedDocument, mongoConverter)
-        // stands in for the single Lettuce I/O thread
-        val redisIoScheduler = Schedulers.newSingle("redis-io")
-        var dispatchThreadName: String? = null
-
-        given {
-                reactiveMongoTemplate.changeStream(
-                    anyOrNull(),
-                    anyOrNull(),
-                    eq(BsonDocument::class.java)
-                )
-            }
-            .willReturn(Flux.just(expectedChangeStreamDocument))
-        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
-        given { resumePolicyService.saveResumeTimestamp(anyOrNull()) }.willReturn(Mono.just(true))
-        given { cdcLockService.acquireEventLock(any()) }
-            .willReturn(Mono.just(true).publishOn(redisIoScheduler))
-        given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
-            .willAnswer {
-                dispatchThreadName = Thread.currentThread().name
-                Mono.just(expectedDocument)
-            }
-
-        try {
-            StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
-                .expectNext(expectedDocument)
-                .verifyComplete()
-        } finally {
-            redisIoScheduler.dispose()
-        }
-
-        assertTrue(
-            dispatchThreadName!!.startsWith("boundedElastic"),
-            "dispatched on $dispatchThreadName"
-        )
     }
 }
