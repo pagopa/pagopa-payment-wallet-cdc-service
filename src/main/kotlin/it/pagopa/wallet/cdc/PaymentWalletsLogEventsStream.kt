@@ -22,6 +22,7 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 import reactor.util.retry.Retry
 
 @Component
@@ -96,6 +97,8 @@ class PaymentWalletsLogEventsStream(
         return Mono.defer {
                 cdcLockService
                     .acquireEventLock(event?.getString("_id").toString())
+                    // leave the Lettuce I/O thread: work done there delays every other Redis reply
+                    .publishOn(Schedulers.boundedElastic())
                     .filter { it == true }
                     .flatMap { walletPaymentCDCEventDispatcherService.dispatchEvent(event) }
             }
