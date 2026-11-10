@@ -5,11 +5,14 @@ import com.mongodb.ServerAddress
 import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.properties.RetryStreamPolicyConfig
 import it.pagopa.wallet.exceptions.LockNotAcquiredException
+import it.pagopa.wallet.liveness.CustomLivenessIndicator
 import it.pagopa.wallet.services.CdcLockService
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
 import it.pagopa.wallet.util.ChangeStreamDocumentUtil
 import java.time.Instant
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import org.bson.BsonDocument
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.internal.verification.Times
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
+import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.convert.MongoConverter
 import org.springframework.test.context.TestPropertySource
@@ -82,11 +86,15 @@ class PaymentWalletsLogEventsStreamTest {
         given { walletPaymentCDCEventDispatcherService.dispatchEvent(anyOrNull()) }
             .willReturn(Mono.just(expectedDocument))
 
+        CustomLivenessIndicator.lastDequeuedEventAt = Instant.MIN
+        val testStart = Instant.now()
+
         StepVerifier.create(paymentWalletsLogEventsStream.streamPaymentWalletsLogEvents())
             .expectNext(expectedDocument)
             .verifyComplete()
 
         verify(cdcLockService, Times(1)).acquireEventLock(expectedDocument.getString("_id"))
+        assertFalse(CustomLivenessIndicator.lastDequeuedEventAt.isBefore(testStart))
     }
 
     @Test
@@ -359,5 +367,60 @@ class PaymentWalletsLogEventsStreamTest {
         verify(cdcLockService, Times(1)).acquireEventLock(expectedDocument.getString("_id"))
         verify(walletPaymentCDCEventDispatcherService, Times(0)).dispatchEvent(any())
         verify(resumePolicyService, Times(0)).saveResumeTimestamp(any())
+    }
+
+    @Test
+    fun `should mark CDC stream as up and running on subscribe`() {
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willReturn(Flux.never())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
+        CustomLivenessIndicator.cdcStreamUpAndRunning.set(false)
+
+        paymentWalletsLogEventsStream.onApplicationEvent(mock<ApplicationReadyEvent>())
+
+        assertTrue(CustomLivenessIndicator.cdcStreamUpAndRunning.get())
+    }
+
+    @Test
+    fun `should mark CDC stream as not running on stream completion`() {
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willReturn(Flux.empty())
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
+        CustomLivenessIndicator.cdcStreamUpAndRunning.set(true)
+
+        paymentWalletsLogEventsStream.onApplicationEvent(mock<ApplicationReadyEvent>())
+
+        assertFalse(CustomLivenessIndicator.cdcStreamUpAndRunning.get())
+    }
+
+    @Test
+    fun `should mark CDC stream as not running on stream error`() {
+        // non Mongo exceptions are not retried, so the error reaches the subscriber synchronously
+        given {
+                reactiveMongoTemplate.changeStream(
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(BsonDocument::class.java)
+                )
+            }
+            .willThrow(IllegalStateException("Test error"))
+        given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
+        CustomLivenessIndicator.cdcStreamUpAndRunning.set(true)
+
+        paymentWalletsLogEventsStream.onApplicationEvent(mock<ApplicationReadyEvent>())
+
+        assertFalse(CustomLivenessIndicator.cdcStreamUpAndRunning.get())
     }
 }

@@ -3,6 +3,7 @@ package it.pagopa.wallet.cdc
 import com.mongodb.MongoException
 import it.pagopa.wallet.config.properties.ChangeStreamOptionsConfig
 import it.pagopa.wallet.config.properties.RetryStreamPolicyConfig
+import it.pagopa.wallet.liveness.CustomLivenessIndicator
 import it.pagopa.wallet.services.CdcLockService
 import it.pagopa.wallet.services.ResumePolicyService
 import it.pagopa.wallet.services.WalletPaymentCDCEventDispatcherService
@@ -38,7 +39,19 @@ class PaymentWalletsLogEventsStream(
     private val logger = LoggerFactory.getLogger(PaymentWalletsLogEventsStream::class.java)
 
     override fun onApplicationEvent(event: ApplicationReadyEvent) {
-        this.streamPaymentWalletsLogEvents().subscribe()
+        this.streamPaymentWalletsLogEvents()
+            .doOnSubscribe {
+                logger.info("CDC service is now running and waiting for change stream events...")
+                CustomLivenessIndicator.cdcStreamUpAndRunning.set(true)
+            }
+            .doOnError { CustomLivenessIndicator.cdcStreamUpAndRunning.set(false) }
+            .doOnComplete {
+                logger.warn(
+                    "Wallet change stream completed. The service might stop processing new events."
+                )
+                CustomLivenessIndicator.cdcStreamUpAndRunning.set(false)
+            }
+            .subscribe()
     }
 
     fun streamPaymentWalletsLogEvents(): Flux<Document> {
@@ -64,6 +77,7 @@ class PaymentWalletsLogEventsStream(
                                 BsonDocument::class.java
                             )
                         }
+                        .doOnNext { CustomLivenessIndicator.lastDequeuedEventAt = Instant.now() }
                         // Process the elements of the Flux
                         .flatMap { processEvent(it.raw?.fullDocument) }
                         // Save resume token every n emitted elements
