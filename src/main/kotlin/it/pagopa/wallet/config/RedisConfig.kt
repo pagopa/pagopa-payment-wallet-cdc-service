@@ -3,6 +3,7 @@ package it.pagopa.wallet.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import it.pagopa.wallet.common.ExclusiveLockDocument
 import java.time.Instant
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -31,6 +32,23 @@ class RedisConfig {
 
         val serializationContext =
             RedisSerializationContext.newSerializationContext<String, Instant>(keySerializer)
+                .value(valueSerializer)
+                .build()
+
+        return ReactiveRedisTemplate(reactiveRedisConnectionFactory, serializationContext)
+    }
+
+    @Bean
+    fun exclusiveLockRedisTemplate(
+        reactiveRedisConnectionFactory: ReactiveRedisConnectionFactory
+    ): ReactiveRedisTemplate<String, ExclusiveLockDocument> {
+        val keySerializer = StringRedisSerializer()
+        val valueSerializer = Jackson2JsonRedisSerializer(ExclusiveLockDocument::class.java)
+
+        val serializationContext =
+            RedisSerializationContext.newSerializationContext<String, ExclusiveLockDocument>(
+                    keySerializer
+                )
                 .value(valueSerializer)
                 .build()
 
