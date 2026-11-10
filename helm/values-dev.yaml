@@ -91,7 +91,7 @@ microservice-chart:
     OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     OTEL_TRACES_EXPORTER: otlp
     OTEL_METRICS_EXPORTER: otlp
-    OTEL_LOGS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: otlp
     OTEL_TRACES_SAMPLER: "always_on"
     CDC_QUEUE_NAME: pagopa-d-itn-pay-wallet-cdc-queue
     CDC_QUEUE_TTL_SECONDS: "7200"
