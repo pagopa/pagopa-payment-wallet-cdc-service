@@ -93,7 +93,7 @@ microservice-chart:
     OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     OTEL_TRACES_EXPORTER: otlp
     OTEL_METRICS_EXPORTER: otlp
-    OTEL_LOGS_EXPORTER: otlp
+    OTEL_LOGS_EXPORTER: none
     OTEL_TRACES_SAMPLER: "always_on"
     CDC_QUEUE_NAME: pagopa-u-itn-pay-wallet-cdc-queue
     CDC_QUEUE_TTL_SECONDS: "7200"
@@ -121,12 +121,6 @@ microservice-chart:
     REDIS_HOST: pagopa-u-itn-pay-wallet-redis-std.redis.cache.windows.net
     REDIS_PORT: "6380"
     REDIS_SSL_ENABLED: "true"
-    REDIS_SUB_CONN_MIN: "4"
-    REDIS_SUB_CONN_MAX: "24"
-    REDIS_SLAVE_CONN_MIN: "4"
-    REDIS_SLAVE_CONN_MAX: "24"
-    REDIS_MASTER_CONN_MIN: "4"
-    REDIS_MASTER_CONN_MAX: "24"
     REDIS_TIMEOUT: "2s"
     REDIS_CONNECTION_TIMEOUT: "2s"
     CDC_REDIS_RESUME_KEYSPACE: "cdcResume"
