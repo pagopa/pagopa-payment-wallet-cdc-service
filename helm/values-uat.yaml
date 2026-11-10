@@ -131,6 +131,7 @@ microservice-chart:
     CDC_REDIS_JOB_LOCK_KEYSPACE: "cdcEventLock"
     CDC_REDIS_JOB_LOCK_TTL_MS: "600000"
     CDC_REDIS_JOB_LOCK_WAIT_TIME_MS: "100"
+    CUSTOM_LIVENESS_INDICATOR_CDC_INACTIVITY_THRESHOLD_SECONDS: "-1" #disabled
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     MONGO_PASSWORD: mongo-wallet-password
