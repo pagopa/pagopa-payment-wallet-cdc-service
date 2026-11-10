@@ -43,6 +43,8 @@ class PaymentWalletsLogEventsStream(
             .doOnSubscribe {
                 logger.info("CDC service is now running and waiting for change stream events...")
                 CustomLivenessIndicator.cdcStreamUpAndRunning.set(true)
+                // start the inactivity window, otherwise a new pod is broken until its 1st event
+                CustomLivenessIndicator.lastDequeuedEventAt = Instant.now()
             }
             .doOnError { CustomLivenessIndicator.cdcStreamUpAndRunning.set(false) }
             .doOnComplete {

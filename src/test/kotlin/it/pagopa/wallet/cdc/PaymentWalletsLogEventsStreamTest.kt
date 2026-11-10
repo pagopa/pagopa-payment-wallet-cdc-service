@@ -381,10 +381,13 @@ class PaymentWalletsLogEventsStreamTest {
             .willReturn(Flux.never())
         given { resumePolicyService.getResumeTimestamp() }.willReturn(Mono.just(Instant.now()))
         CustomLivenessIndicator.cdcStreamUpAndRunning.set(false)
+        CustomLivenessIndicator.lastDequeuedEventAt = Instant.MIN
+        val testStart = Instant.now()
 
         paymentWalletsLogEventsStream.onApplicationEvent(mock<ApplicationReadyEvent>())
 
         assertTrue(CustomLivenessIndicator.cdcStreamUpAndRunning.get())
+        assertFalse(CustomLivenessIndicator.lastDequeuedEventAt.isBefore(testStart))
     }
 
     @Test
