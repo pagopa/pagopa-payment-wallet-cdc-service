@@ -1,46 +1,81 @@
 package it.pagopa.wallet.services
 
+import it.pagopa.wallet.common.ExclusiveLockDocument
 import it.pagopa.wallet.config.properties.RedisJobLockPolicyConfig
 import it.pagopa.wallet.exceptions.LockNotAcquiredException
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 import kotlin.test.Test
-import kotlinx.coroutines.reactor.mono
+import kotlin.test.assertEquals
 import org.mockito.kotlin.*
-import org.redisson.api.RLockReactive
-import org.redisson.api.RedissonReactiveClient
+import org.springframework.data.redis.core.ReactiveRedisTemplate
+import org.springframework.data.redis.core.ReactiveValueOperations
+import reactor.core.publisher.Mono
 import reactor.kotlin.test.test
 
 class CdcLockServiceTest {
-    private val rLockReactive: RLockReactive = mock()
-    private val redissonClient: RedissonReactiveClient = mock()
+    private val valueOperations: ReactiveValueOperations<String, ExclusiveLockDocument> = mock()
+    private val exclusiveLockRedisTemplate: ReactiveRedisTemplate<String, ExclusiveLockDocument> =
+        mock()
     private val redisJobLockPolicyConfig: RedisJobLockPolicyConfig =
         RedisJobLockPolicyConfig("lockkeyspace", 20, 2)
     private val cdcLockService: CdcLockService =
-        CdcLockService(redissonClient, redisJobLockPolicyConfig)
+        CdcLockService(exclusiveLockRedisTemplate, redisJobLockPolicyConfig)
+
+    private val eventId = "eventId"
+    private val expectedLockKey = "lockkeyspace:lock:$eventId"
 
     /*+ Lock tests **/
 
     @Test
     fun `Should acquire lock`() {
         // pre-requisites
-        val eventId = "eventId"
-        given(redissonClient.getLock(any<String>())).willReturn(rLockReactive)
-        given(rLockReactive.tryLock(any(), any(), any())).willReturn(mono { true })
+        given(exclusiveLockRedisTemplate.opsForValue()).willReturn(valueOperations)
+        given(valueOperations.setIfAbsent(any(), any(), any<Duration>()))
+            .willReturn(Mono.just(true))
 
         // Test
         cdcLockService.acquireEventLock(eventId).test().expectNext(true).verifyComplete()
 
         // verifications
-        verify(redissonClient, times(1)).getLock("lockkeyspace:lock:$eventId")
-        verify(rLockReactive, times(1)).tryLock(2, 20, TimeUnit.MILLISECONDS)
+        verifyLockRequested()
     }
 
     @Test
-    fun `Should throw LockNotAcquiredException when tryLock throw exception`() {
+    fun `Should not acquire lock already held by another instance`() {
         // pre-requisites
-        val eventId = "eventId"
-        given(redissonClient.getLock(any<String>())).willReturn(rLockReactive)
-        given(rLockReactive.tryLock(any(), any(), any()))
+        given(exclusiveLockRedisTemplate.opsForValue()).willReturn(valueOperations)
+        given(valueOperations.setIfAbsent(any(), any(), any<Duration>()))
+            .willReturn(Mono.just(false))
+
+        // Test
+        cdcLockService.acquireEventLock(eventId).test().expectNext(false).verifyComplete()
+
+        // verifications
+        verifyLockRequested()
+    }
+
+    @Test
+    fun `Should throw LockNotAcquiredException when setIfAbsent emits error`() {
+        // pre-requisites
+        given(exclusiveLockRedisTemplate.opsForValue()).willReturn(valueOperations)
+        given(valueOperations.setIfAbsent(any(), any(), any<Duration>()))
+            .willReturn(Mono.error(RuntimeException("Test exception")))
+
+        // Test
+        cdcLockService
+            .acquireEventLock(eventId)
+            .test()
+            .expectError(LockNotAcquiredException::class.java)
+            .verify()
+
+        // verifications
+        verifyLockRequested()
+    }
+
+    @Test
+    fun `Should throw LockNotAcquiredException when opsForValue throw exception`() {
+        // pre-requisites
+        given(exclusiveLockRedisTemplate.opsForValue())
             .willThrow(RuntimeException("Test exception"))
 
         // Test
@@ -51,24 +86,20 @@ class CdcLockServiceTest {
             .verify()
 
         // verifications
-        verify(redissonClient, times(1)).getLock("lockkeyspace:lock:$eventId")
-        verify(rLockReactive, times(1)).tryLock(2, 20, TimeUnit.MILLISECONDS)
+        verify(exclusiveLockRedisTemplate, times(1)).opsForValue()
+        verifyNoInteractions(valueOperations)
     }
 
-    @Test
-    fun `Should throw LockNotAcquiredException when getLock throw exception`() {
-        // pre-requisites
-        val eventId = "eventId"
-        given(redissonClient.getLock(any<String>())).willThrow(RuntimeException("Test exception"))
-
-        // Test
-        cdcLockService
-            .acquireEventLock(eventId)
-            .test()
-            .expectError(LockNotAcquiredException::class.java)
-            .verify()
-
-        // verifications
-        verify(redissonClient, times(1)).getLock("lockkeyspace:lock:$eventId")
+    private fun verifyLockRequested() {
+        verify(valueOperations, times(1))
+            .setIfAbsent(
+                eq(expectedLockKey),
+                argThat {
+                    assertEquals(expectedLockKey, this.id)
+                    assertEquals(CdcLockService.LOCK_HOLDER_NAME, this.holderName)
+                    true
+                },
+                eq(Duration.ofMillis(20))
+            )
     }
 }
